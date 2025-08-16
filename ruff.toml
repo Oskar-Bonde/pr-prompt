@@ -1,0 +1,40 @@
+target-version = "py39"
+
+[lint]
+select = ["ALL"]
+
+ignore = [
+    "ANN204", # missing return type special method
+    "COM",    # missing trailing comma
+    "D1",     # missing docstring
+    "D203",   # 1 blank line required before class docstring
+    "D212",   # multi-line docstring summary should start at the second line
+    "D413",   # missing blank line after last section in docstring
+    "E501",   # line too long
+    "EXE002", # executable python files must have a shebang line like `#!/usr/bin/env python`
+    "FA100",
+    "TD",     # flake8-todos
+    "TID252", # prefer absolute imports over relative imports from parent modules
+    "TRY003", # avoid specifying long messages outside the exception class
+    "UP045",  # use `X | None` for type annotations instead of `Optional[X]`
+]
+
+pylint.max-args = 7
+
+explicit-preview-rules = true
+
+[lint.per-file-ignores]
+"**/tests/**" = [
+    "ARG",  # Unused argument. False positive in tests.
+    "C901", # McCabe name complexity
+    "S",    # bandit
+    "T20",  # print is not allowed
+]
+
+[format]
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+docstring-code-format = true
+
+# Set the line length limit used when formatting code snippets in docstrings.
+docstring-code-line-length = "dynamic"

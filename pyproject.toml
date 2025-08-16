@@ -1,0 +1,44 @@
+[project]
+name = "pr-reviewer"
+version = "0.1.0"
+description = "A Python CLI tool that uses Amazon Bedrock (Claude) to review Azure DevOps pull requests"
+authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "azure-devops>=7.0.0",
+    "boto3>=1.40.0",
+    "click>=8.1.7",
+    "gitingest>=0.3.1",
+    "requests>=2.31.0",
+    "rich>=13.7.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy",
+    "pylint",
+    "pylint-pytest",
+    "pytest",
+    "pytest-cov",
+    "pytest-randomly",
+    "ruff",
+]
+
+[project.scripts]
+bedrock-reviewer = "bedrock_reviewer.cli:main"
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+show_error_codes = true
+pretty = true
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

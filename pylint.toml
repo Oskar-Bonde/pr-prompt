@@ -1,0 +1,42 @@
+[tool.pylint.main]
+
+# List of plugins to load
+load-plugins = ["pylint_pytest"]
+
+[tool.pylint.design]
+
+# Maximum number of arguments for function / method.
+max-args = 6
+
+# Maximum number of positional arguments for function / method.
+max-positional-arguments = 3
+
+# Minimum number of public methods for a class (see R0903).
+min-public-methods = 1
+
+[tool.pylint.format]
+
+max-line-length = 150
+
+[tool.pylint."messages control"]
+
+# Disable the message, report, category or checker with the given id(s).
+disable = [
+    "logging-fstring-interpolation,",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
+
+# Enable the message, report, category or checker with the given id(s).
+enable = ["useless-suppression"]
+
+[tool.pylint.similarities]
+
+# Minimum lines number of a similarity.
+min-similarity-lines = 15
+
+[tool.pylint.variables]
+
+# Argument names that match this expression will be ignored.
+ignored-argument-names = "^self$|^cls$|^scope$|^construct_id$|_.*"
