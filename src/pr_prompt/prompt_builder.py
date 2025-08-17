@@ -12,7 +12,7 @@ class PromptSection:
     """Represents a section of the prompt."""
 
     title: str
-    content: str
+    content: str = ""
     level: int = 2  # Markdown heading level
 
     def render(self) -> str:
@@ -97,25 +97,24 @@ Focus on actionable feedback that improves code quality and maintainability."""
             )
         )
 
-    def add_diff(self, diff_text: str, max_chars: int) -> None:
-        if max_chars and len(diff_text) > max_chars:
-            diff_text = self._truncate_diff(diff_text, max_chars)
+    def add_file_diffs(self, file_diffs: dict[str, str]) -> None:
+        """Add file diffs with individual headings for each file."""
+        self.sections.append(PromptSection(title="File diffs"))
 
-        content = (
-            f"```diff\n{diff_text if diff_text else '# No changes to display'}\n```"
-        )
+        for file_path, diff_content in file_diffs.items():
+            content = f"```diff\n{diff_content}\n```"
 
-        self.sections.append(PromptSection(title="Changes", content=content, level=2))
-
-    def add_context_files(self, context_files: dict[Path, str]) -> None:
-        """Add a context files section with a main heading and sub-headings for each file."""
-        self.sections.append(
-            PromptSection(
-                title="Context Files",
-                content="",
-                level=2,
+            self.sections.append(
+                PromptSection(
+                    title=f"File diff: `{file_path}`",
+                    content=content,
+                    level=3,
+                )
             )
-        )
+
+    def add_context_files(self, context_files: dict[str, str]) -> None:
+        """Add a context files section with a main heading and sub-headings for each file."""
+        self.sections.append(PromptSection(title="Context Files"))
         for file_path, content in context_files.items():
             content_md = self.get_markdown_content(file_path, content)
             self.sections.append(
@@ -126,8 +125,8 @@ Focus on actionable feedback that improves code quality and maintainability."""
                 )
             )
 
-    def get_markdown_content(self, file_path: Path, content: str) -> str:
-        extension = file_path.suffix[1:]
+    def get_markdown_content(self, file_path: str, content: str) -> str:
+        extension = Path(file_path).suffix[1:]
         lang_map = {
             "py": "python",
             "js": "javascript",
@@ -171,42 +170,3 @@ Focus on actionable feedback that improves code quality and maintainability."""
         prompt_parts = [section.render() for section in self.sections]
 
         return "\n\n".join(prompt_parts)
-
-    @staticmethod
-    def _truncate_diff(diff_text: str, max_chars: int) -> str:
-        """
-        Truncate diff intelligently, keeping both start and end.
-
-        Args:
-            diff_text: Original diff text.
-            max_chars: Maximum characters to keep.
-
-        Returns:
-            Truncated diff with ellipsis marker.
-        """
-        if len(diff_text) <= max_chars:
-            return diff_text
-
-        # Try to truncate at file boundaries if possible
-        half = max_chars // 2
-
-        # Find a good break point near the middle
-        truncation_marker = "\n\n... [Diff truncated for brevity] ...\n\n"
-
-        # Look for file boundary markers near the truncation points
-        start_chunk = diff_text[:half]
-        end_chunk = diff_text[-half:]
-
-        # Try to find the last complete file diff in start chunk
-        if "\ndiff --git" in start_chunk:
-            last_file_start = start_chunk.rfind("\ndiff --git")
-            if last_file_start > half * 0.7:  # Don't go too far back
-                start_chunk = start_chunk[:last_file_start]
-
-        # Try to find the first complete file diff in end chunk
-        if "diff --git" in end_chunk:
-            first_file_start = end_chunk.find("diff --git")
-            if first_file_start < half * 0.3:  # Don't skip too much
-                end_chunk = end_chunk[first_file_start:]
-
-        return start_chunk + truncation_marker + end_chunk

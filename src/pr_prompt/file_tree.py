@@ -3,20 +3,17 @@ from pathlib import Path
 
 def build_file_tree(files: list[Path]) -> str:
     """Build a tree structure representation of the files."""
-    tree = {}
+    tree: dict = {}
 
     for file in sorted(files):
-        parts = file.parts
-        current = tree
-
         # Navigate through the tree, creating nodes as needed
-        for part in parts:
-            if part not in current:
-                current[part] = {}
-            current = current[part]
+        for part in file.parts:
+            if part not in tree:
+                tree[part] = {}
+            tree = tree[part]
 
     # Convert tree to string representation
-    lines = []
+    lines: list[str] = []
     render_tree_node(tree, lines, "", is_root=True)
 
     return "\n".join(lines)

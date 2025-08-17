@@ -57,34 +57,42 @@ class GitClient:
         changed_files = output.splitlines() if output else []
         return [Path(file) for file in changed_files]
 
-    def get_diff(
+    def get_file_diffs(
         self,
         target_branch: str,
         feature_branch: str,
         file_whitelist: list[Path],
-    ) -> str:
+    ) -> dict[str, str]:
         """
-        Get git diff between two refs.
+        Get git diff for each file between two refs.
 
         Args:
             target_branch: Base reference.
             feature_branch: Head reference.
             file_whitelist: Whitelist of specific files to diff.
+
+        Returns:
+            Dictionary mapping file paths to their diff content.
         """
         if not file_whitelist:
-            return ""
+            return {}
 
-        cmd = [
-            "diff",
-            "--unified=999999",
-            "--diff-algorithm=histogram",
-            "--function-context",
-            f"{target_branch}...{feature_branch}",
-            "--",
-        ]
-        cmd.extend([str(file) for file in file_whitelist])
+        file_diffs = {}
+        for file_path in file_whitelist:
+            cmd = [
+                "diff",
+                "--unified=999999",
+                "--diff-algorithm=histogram",
+                "--function-context",
+                f"{target_branch}...{feature_branch}",
+                "--",
+                str(file_path),
+            ]
+            diff_output = self.run(*cmd)
+            if diff_output:
+                file_diffs[str(file_path)] = diff_output
 
-        return self.run(*cmd)
+        return file_diffs
 
     def list_files(self, ref: str) -> list[Path]:
         """List all files in the repository at a specific ref."""

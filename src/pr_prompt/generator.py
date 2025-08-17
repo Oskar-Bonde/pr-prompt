@@ -58,7 +58,7 @@ class PrPromptGenerator:
             all_files = git.list_files(feature_branch)
             context_file_paths = FileFilter.match(all_files, context_patterns)
             context_files = {
-                file_path: git.get_file_content(feature_branch, file_path)
+                str(file_path): git.get_file_content(feature_branch, file_path)
                 for file_path in context_file_paths
             }
             builder.add_context_files(context_files)
@@ -67,7 +67,7 @@ class PrPromptGenerator:
         builder.add_changed_files(changed_files)
 
         file_whitelist = FileFilter.exclude(changed_files, blacklist_patterns)
-        diff_text = git.get_diff(target_branch, feature_branch, file_whitelist)
-        builder.add_diff(diff_text, max_chars=self.max_diff_chars)
+        file_diffs = git.get_file_diffs(target_branch, feature_branch, file_whitelist)
+        builder.add_file_diffs(file_diffs)
 
         return builder.build()
