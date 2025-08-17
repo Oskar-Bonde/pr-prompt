@@ -6,11 +6,14 @@ def build_file_tree(files: list[Path]) -> str:
     tree: dict = {}
 
     for file in sorted(files):
+        parts = file.parts
+        current = tree
+
         # Navigate through the tree, creating nodes as needed
-        for part in file.parts:
-            if part not in tree:
-                tree[part] = {}
-            tree = tree[part]
+        for part in parts:
+            if part not in current:
+                current[part] = {}
+            current = current[part]
 
     # Convert tree to string representation
     lines: list[str] = []
