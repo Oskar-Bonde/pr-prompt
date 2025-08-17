@@ -625,7 +625,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pr-reviewer"
+name = "pr-prompt"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

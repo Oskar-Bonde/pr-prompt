@@ -1,5 +1,5 @@
 [project]
-name = "pr-reviewer"
+name = "pr-prompt"
 version = "0.1.0"
 description = "A Python CLI tool that uses Amazon Bedrock (Claude) to review Azure DevOps pull requests"
 authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
