@@ -1,9 +1,10 @@
 """Prompt building utilities."""
 
-from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
+from .file_tree import build_file_tree
 
 
 @dataclass
@@ -73,32 +74,12 @@ Focus on actionable feedback that improves code quality and maintainability."""
             )
 
     def add_changed_files(self, files: list[Path]) -> None:
-        if files:
-            # Group files by directory for better organization
-            files_by_dir: dict[str, list[Path]] = defaultdict(list)
-            for file in sorted(files):
-                dir_path = file.parent if file.parent != Path() else Path()
-                files_by_dir[str(dir_path)].append(file)
-
-            content_parts = []
-            for directory, dir_files in sorted(files_by_dir.items()):
-                if (
-                    len(files_by_dir) > 1
-                ):  # Only show directory headers if multiple dirs
-                    content_parts.append(f"**{directory}/**")
-                content_parts.extend(
-                    [
-                        f"  - `{file.name}`" if len(files_by_dir) > 1 else f"- `{file}`"
-                        for file in dir_files
-                    ]
-                )
-
-            content = "\n".join(content_parts)
-        else:
-            content = "No files changed"
+        file_tree = build_file_tree(files) if files else "No files changed"
 
         self.sections.append(
-            PromptSection(title="Changed Files", content=content, level=2)
+            PromptSection(
+                title="Changed Files", content=f"```\n{file_tree}\n```", level=2
+            )
         )
 
     def add_diff(self, diff_text: str, max_chars: int) -> None:
