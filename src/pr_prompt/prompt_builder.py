@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from .diff_parser import DiffFile
 from .file_tree import build_file_tree
 
 
@@ -13,11 +14,11 @@ class PromptSection:
 
     title: str
     content: str = ""
-    level: int = 2  # Markdown heading level
+    heading_level: int = 2
 
     def render(self) -> str:
         """Render the section as markdown."""
-        heading = "#" * self.level
+        heading = "#" * self.heading_level
         if self.content:
             return f"{heading} {self.title}\n\n{self.content}"
         return f"{heading} {self.title}"
@@ -50,7 +51,7 @@ Focus on actionable feedback that improves code quality and maintainability."""
         """Add the review instructions section."""
         self.sections.append(
             PromptSection(
-                title="Pull Request Review Instructions", content=instructions, level=2
+                title="Pull Request Review Instructions", content=instructions
             )
         )
 
@@ -84,7 +85,6 @@ Focus on actionable feedback that improves code quality and maintainability."""
                 PromptSection(
                     title="Pull Request Details",
                     content="\n\n".join(content_parts),
-                    level=2,
                 )
             )
 
@@ -93,22 +93,23 @@ Focus on actionable feedback that improves code quality and maintainability."""
 
         self.sections.append(
             PromptSection(
-                title="Changed Files", content=f"```\n{file_tree}\n```", level=2
+                title="Changed Files",
+                content=f"```\n{file_tree}\n```",
             )
         )
 
-    def add_file_diffs(self, file_diffs: dict[str, str]) -> None:
+    def add_file_diffs(self, file_diffs: dict[str, DiffFile]) -> None:
         """Add file diffs with individual headings for each file."""
         self.sections.append(PromptSection(title="File diffs"))
 
-        for file_path, diff_content in file_diffs.items():
-            content = f"```diff\n{diff_content}\n```"
+        for file_path, diff_file in file_diffs.items():
+            content = f"```diff\n{diff_file.content}\n```"
 
             self.sections.append(
                 PromptSection(
-                    title=f"File diff: `{file_path}`",
+                    title=f"{diff_file.operation_type.value} `{file_path}`",
                     content=content,
-                    level=3,
+                    heading_level=3,
                 )
             )
 
@@ -121,7 +122,7 @@ Focus on actionable feedback that improves code quality and maintainability."""
                 PromptSection(
                     title=f"File: `{file_path}`",
                     content=content_md,
-                    level=3,
+                    heading_level=3,
                 )
             )
 

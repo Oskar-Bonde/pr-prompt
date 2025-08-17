@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from .diff_parser import parse_diff_by_files
+from .diff_parser import clean_file_diffs, parse_diff_by_files
 from .file_filters import FileFilter
 from .git_utils import GitClient
 from .prompt_builder import PromptBuilder
@@ -70,6 +70,7 @@ class PrPromptGenerator:
         file_whitelist = FileFilter.exclude(changed_files, blacklist_patterns)
         diff = git.get_diff(target_branch, feature_branch)
         file_diffs = parse_diff_by_files(diff, file_whitelist)
-        builder.add_file_diffs(file_diffs)
+        cleaned_diffs = clean_file_diffs(file_diffs)
+        builder.add_file_diffs(cleaned_diffs)
 
         return builder.build()
