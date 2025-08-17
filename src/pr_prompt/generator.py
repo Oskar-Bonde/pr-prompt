@@ -55,7 +55,13 @@ class PrPromptGenerator:
         )
 
         if context_patterns:
-            self.add_context_files(feature_branch, context_patterns, git, builder)
+            all_files = git.list_files(feature_branch)
+            context_file_paths = FileFilter.match(all_files, context_patterns)
+            context_files = {
+                file_path: git.get_file_content(feature_branch, file_path)
+                for file_path in context_file_paths
+            }
+            builder.add_context_files(context_files)
 
         changed_files = git.get_changed_files(target_branch, feature_branch)
         builder.add_changed_files(changed_files)
@@ -65,16 +71,3 @@ class PrPromptGenerator:
         builder.add_diff(diff_text, max_chars=self.max_diff_chars)
 
         return builder.build()
-
-    def add_context_files(
-        self,
-        feature_branch: str,
-        context_patterns: list[str],
-        git: GitClient,
-        builder: PromptBuilder,
-    ) -> None:
-        all_files = git.list_files(feature_branch)
-        context_files = FileFilter.match(all_files, context_patterns)
-        for file_path in context_files:
-            content = git.get_file_content(feature_branch, file_path)
-            builder.add_context_file(file_path, content)

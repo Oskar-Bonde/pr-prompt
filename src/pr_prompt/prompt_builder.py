@@ -18,7 +18,9 @@ class PromptSection:
     def render(self) -> str:
         """Render the section as markdown."""
         heading = "#" * self.level
-        return f"{heading} {self.title}\n\n{self.content}"
+        if self.content:
+            return f"{heading} {self.title}\n\n{self.content}"
+        return f"{heading} {self.title}"
 
 
 class PromptBuilder:
@@ -105,17 +107,24 @@ Focus on actionable feedback that improves code quality and maintainability."""
 
         self.sections.append(PromptSection(title="Changes", content=content, level=2))
 
-    def add_context_file(self, file_path: Path, content: str) -> None:
-        """Add a context file section."""
-        content_md = self.get_markdown_content(file_path, content)
-
+    def add_context_files(self, context_files: dict[Path, str]) -> None:
+        """Add a context files section with a main heading and sub-headings for each file."""
         self.sections.append(
             PromptSection(
-                title=f"Context: `{file_path}`",
-                content=content_md,
-                level=3,
+                title="Context Files",
+                content="",
+                level=2,
             )
         )
+        for file_path, content in context_files.items():
+            content_md = self.get_markdown_content(file_path, content)
+            self.sections.append(
+                PromptSection(
+                    title=f"File: `{file_path}`",
+                    content=content_md,
+                    level=3,
+                )
+            )
 
     def get_markdown_content(self, file_path: Path, content: str) -> str:
         extension = file_path.suffix[1:]
