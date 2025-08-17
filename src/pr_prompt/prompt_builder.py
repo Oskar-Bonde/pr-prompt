@@ -111,27 +111,61 @@ Focus on actionable feedback that improves code quality and maintainability."""
 
         self.sections.append(PromptSection(title="Changes", content=content, level=2))
 
-    def add_context_file(self, file_path: str, content: str) -> None:
+    def add_context_file(self, file_path: Path, content: str) -> None:
         """Add a context file section."""
+        content_md = self.get_markdown_content(file_path, content)
+
         self.sections.append(
             PromptSection(
                 title=f"Context: `{file_path}`",
-                content=f"```\n{content}\n```",
+                content=content_md,
                 level=3,
             )
         )
+
+    def get_markdown_content(self, file_path: Path, content: str) -> str:
+        extension = file_path.suffix[1:]
+        lang_map = {
+            "py": "python",
+            "js": "javascript",
+            "ts": "typescript",
+            "jsx": "jsx",
+            "tsx": "tsx",
+            "java": "java",
+            "go": "go",
+            "rs": "rust",
+            "cpp": "cpp",
+            "c": "c",
+            "cs": "csharp",
+            "rb": "ruby",
+            "php": "php",
+            "swift": "swift",
+            "kt": "kotlin",
+            "scala": "scala",
+            "sh": "bash",
+            "yml": "yaml",
+            "yaml": "yaml",
+            "json": "json",
+            "xml": "xml",
+            "html": "html",
+            "css": "css",
+            "sql": "sql",
+            "md": "markdown",
+        }
+        lang = lang_map.get(extension, "text")
+
+        if lang == "markdown":
+            content = f"~~~{lang}\n{content}\n~~~"
+        else:
+            content = f"```{lang}\n{content}\n```"
+        return content
 
     def build(self) -> str:
         """Build the final prompt."""
         if not self.sections:
             return ""
 
-        # Add a separator between major sections for clarity
-        prompt_parts = []
-        for i, section in enumerate(self.sections):
-            if i > 0 and section.level == 2:
-                prompt_parts.append("---")
-            prompt_parts.append(section.render())
+        prompt_parts = [section.render() for section in self.sections]
 
         return "\n\n".join(prompt_parts)
 

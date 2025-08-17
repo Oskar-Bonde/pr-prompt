@@ -2,6 +2,7 @@
 
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 
 class GitClient:
@@ -22,9 +23,10 @@ class GitClient:
     def fetch_branch(self, branch: str) -> None:
         """Fetch a specific branch from a remote."""
         remote, branch_ref = self._parse_branch(branch)
-        self.run("fetch", remote, branch_ref)
+        if remote:
+            self.run("fetch", remote, branch_ref)
 
-    def _parse_branch(self, branch: str) -> tuple[str, str]:
+    def _parse_branch(self, branch: str) -> tuple[Optional[str], str]:
         """
         Parse a branch reference into remote and branch name.
 
@@ -38,7 +40,7 @@ class GitClient:
             branch_parts = branch.split("/", 1)
             if branch_parts[0] in ["origin", "upstream"]:
                 return branch_parts[0], branch_parts[1]
-        return "", branch
+        return None, branch
 
     def get_changed_files(self, target_branch: str, feature_branch: str) -> list[Path]:
         """
@@ -84,13 +86,14 @@ class GitClient:
 
         return self.run(*cmd)
 
-    def list_files(self, ref: str) -> list[str]:
+    def list_files(self, ref: str) -> list[Path]:
         """List all files in the repository at a specific ref."""
         output = self.run("ls-tree", "-r", "--name-only", ref)
-        return output.splitlines() if output else []
+        files_list = output.splitlines() if output else []
+        return [Path(file) for file in files_list]
 
-    def get_file_content(self, ref: str, file_path: str) -> str:
-        return self.run("show", f"{ref}:{file_path}")
+    def get_file_content(self, ref: str, file_path: Path) -> str:
+        return self.run("show", f"{ref}:{file_path!s}")
 
 
 class GitError(Exception):

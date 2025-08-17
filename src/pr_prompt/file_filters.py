@@ -43,10 +43,9 @@ class FileFilter:
         if not patterns:
             return []
 
-
         matched = set()
         for pattern in patterns:
-            matched.update(fnmatch.filter([str(file) for file in files], pattern))
+            for file in files:
+                if fnmatch.fnmatch(str(file), pattern):
+                    matched.add(file)
         return sorted(matched)
-    
-    
