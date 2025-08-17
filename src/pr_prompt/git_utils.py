@@ -95,6 +95,13 @@ class GitClient:
     def get_file_content(self, ref: str, file_path: Path) -> str:
         return self.run("show", f"{ref}:{file_path!s}")
 
+    def get_commit_messages(self, target_branch: str, feature_branch: str) -> list[str]:
+        """Get list of commit messages between two refs."""
+        output = self.run(
+            "log", "--pretty=format:%s", f"{target_branch}..{feature_branch}"
+        )
+        return output.splitlines() if output else []
+
 
 class GitError(Exception):
     """Raised when a git command fails."""

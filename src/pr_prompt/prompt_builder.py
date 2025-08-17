@@ -53,16 +53,29 @@ Focus on actionable feedback that improves code quality and maintainability."""
         )
 
     def add_metadata(
-        self, pr_title: Optional[str] = None, pr_description: Optional[str] = None
+        self,
+        target_branch: str,
+        feature_branch: str,
+        commit_messages: list[str],
+        pr_title: Optional[str],
+        pr_description: Optional[str],
     ) -> None:
         """Add PR metadata section."""
         content_parts = []
+
+        repo_name = Path().cwd().name
+        content_parts.append(f"**Repository:** {repo_name}")
+
+        content_parts.append(f"**Branch:** `{feature_branch}` -> `{target_branch}`")
 
         if pr_title:
             content_parts.append(f"**Title:** {pr_title}")
 
         if pr_description:
             content_parts.append(f"**Description:**\n\n{pr_description}")
+
+        commits_text = "\n".join(f" - {msg}" for msg in commit_messages)
+        content_parts.append(f"**Commits:**\n{commits_text}")
 
         if content_parts:
             self.sections.append(

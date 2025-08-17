@@ -10,10 +10,7 @@ from .prompt_builder import PromptBuilder
 class PrPromptGenerator:
     """Generator for pull request review prompts."""
 
-    def __init__(
-        self,
-        max_diff_chars: int = 50000
-    ):
+    def __init__(self, max_diff_chars: int = 50000):
         self.max_diff_chars = max_diff_chars
 
     def generate(
@@ -48,7 +45,17 @@ class PrPromptGenerator:
 
         builder.add_instructions(custom_instructions)
 
-        builder.add_metadata(pr_title, pr_description)
+        commit_messages = git.get_commit_messages(target_branch, feature_branch)
+        builder.add_metadata(
+            target_branch,
+            feature_branch,
+            commit_messages,
+            pr_title,
+            pr_description,
+        )
+
+        if context_patterns:
+            self.add_context_files(feature_branch, context_patterns, git, builder)
 
         changed_files = git.get_changed_files(target_branch, feature_branch)
         builder.add_changed_files(changed_files)
@@ -57,11 +64,17 @@ class PrPromptGenerator:
         diff_text = git.get_diff(target_branch, feature_branch, file_whitelist)
         builder.add_diff(diff_text, max_chars=self.max_diff_chars)
 
-        if context_patterns:
-            all_files = git.list_files(feature_branch)
-            context_files = FileFilter.match(all_files, context_patterns)
-            for file_path in context_files:
-                content = git.get_file_content(feature_branch, file_path)
-                builder.add_context_file(file_path, content)
-
         return builder.build()
+
+    def add_context_files(
+        self,
+        feature_branch: str,
+        context_patterns: list[str],
+        git: GitClient,
+        builder: PromptBuilder,
+    ) -> None:
+        all_files = git.list_files(feature_branch)
+        context_files = FileFilter.match(all_files, context_patterns)
+        for file_path in context_files:
+            content = git.get_file_content(feature_branch, file_path)
+            builder.add_context_file(file_path, content)
