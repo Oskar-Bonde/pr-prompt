@@ -1,23 +1,22 @@
 """File filtering utilities."""
 
 import fnmatch
-from pathlib import Path
 
 
 class FileFilter:
     """Utility class for filtering files based on patterns."""
 
     @staticmethod
-    def exclude(files: list[Path], patterns: list[str]) -> list[Path]:
+    def exclude(files: list[str], patterns: list[str]) -> list[str]:
         """
-        Return Path objects that don't match any of the given patterns.
+        Return file paths that don't match any of the given patterns.
 
         Args:
-            files: list of Path objects.
+            files: list of file path strings.
             patterns: list of glob patterns to exclude.
 
         Returns:
-            Filtered list of Path objects.
+            Filtered list of file path strings.
         """
         if not patterns:
             return files
@@ -25,16 +24,16 @@ class FileFilter:
         return [
             file
             for file in files
-            if not any(fnmatch.fnmatch(str(file), pattern) for pattern in patterns)
+            if not any(fnmatch.fnmatch(file, pattern) for pattern in patterns)
         ]
 
     @staticmethod
-    def match(files: list[Path], patterns: list[str]) -> list[Path]:
+    def match(files: list[str], patterns: list[str]) -> list[str]:
         """
         Return files matching any of the given patterns.
 
         Args:
-            files: list of file paths.
+            files: list of file path strings.
             patterns: list of glob patterns to match.
 
         Returns:
@@ -46,6 +45,6 @@ class FileFilter:
         matched = set()
         for pattern in patterns:
             for file in files:
-                if fnmatch.fnmatch(str(file), pattern):
+                if fnmatch.fnmatch(file, pattern):
                     matched.add(file)
         return sorted(matched)

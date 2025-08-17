@@ -42,7 +42,7 @@ class GitClient:
                 return branch_parts[0], branch_parts[1]
         return None, branch
 
-    def get_changed_files(self, target_branch: str, feature_branch: str) -> list[Path]:
+    def get_changed_files(self, target_branch: str, feature_branch: str) -> list[str]:
         """
         Get list of files changed between two refs.
 
@@ -54,8 +54,7 @@ class GitClient:
             list of changed file paths.
         """
         output = self.run("diff", "--name-only", f"{target_branch}...{feature_branch}")
-        changed_files = output.splitlines() if output else []
-        return [Path(file) for file in changed_files]
+        return output.splitlines() if output else []
 
     def get_diff(
         self,
@@ -78,14 +77,13 @@ class GitClient:
             f"{target_branch}...{feature_branch}",
         )
 
-    def list_files(self, ref: str) -> list[Path]:
+    def list_files(self, ref: str) -> list[str]:
         """List all files in the repository at a specific ref."""
         output = self.run("ls-tree", "-r", "--name-only", ref)
-        files_list = output.splitlines() if output else []
-        return [Path(file) for file in files_list]
+        return output.splitlines() if output else []
 
-    def get_file_content(self, ref: str, file_path: Path) -> str:
-        return self.run("show", f"{ref}:{file_path!s}")
+    def get_file_content(self, ref: str, file_path: str) -> str:
+        return self.run("show", f"{ref}:{file_path}")
 
     def get_commit_messages(self, target_branch: str, feature_branch: str) -> list[str]:
         """Get list of commit messages between two refs."""

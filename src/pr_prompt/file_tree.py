@@ -1,12 +1,12 @@
 from pathlib import Path
 
 
-def build_file_tree(files: list[Path]) -> str:
+def build_file_tree(files: list[str]) -> str:
     """Build a tree structure representation of the files."""
     tree: dict = {}
 
     for file in sorted(files):
-        parts = file.parts
+        parts = Path(file).parts
         current = tree
 
         # Navigate through the tree, creating nodes as needed

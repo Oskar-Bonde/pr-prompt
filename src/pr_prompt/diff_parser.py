@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 
 
-def parse_diff_by_files(diff: str, file_whitelist: list[Path]) -> dict[str, str]:
+def parse_diff_by_files(diff: str, file_whitelist: list[str]) -> dict[str, str]:
     """
     Parse a git diff output and extract individual file diffs.
 
@@ -14,12 +13,10 @@ def parse_diff_by_files(diff: str, file_whitelist: list[Path]) -> dict[str, str]
     current_file = None
     current_diff_lines = []
 
-    whitelist_strings = {str(f) for f in file_whitelist}
-
     for line in diff.split("\n"):
         if line.startswith("diff --git"):
             # Save previous file diff if it was in whitelist
-            if current_file and current_file in whitelist_strings:
+            if current_file and current_file in file_whitelist:
                 file_diffs[current_file] = "\n".join(current_diff_lines)
 
             # Start new file diff
@@ -30,7 +27,7 @@ def parse_diff_by_files(diff: str, file_whitelist: list[Path]) -> dict[str, str]
             current_diff_lines.append(line)
 
     # Save the last file
-    if current_file and current_file in whitelist_strings:
+    if current_file and current_file in file_whitelist:
         file_diffs[current_file] = "\n".join(current_diff_lines)
 
     return file_diffs
@@ -63,7 +60,7 @@ class DiffOperation(Enum):
     ADDED = "Added"
     DELETED = "Deleted"
     RENAMED = "Renamed"
-    RENAMED_AND_MODIFIED = "Renamed and Modified"
+    RENAMED_AND_MODIFIED = "Renamed and modified"
 
 
 @dataclass

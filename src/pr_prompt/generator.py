@@ -1,5 +1,6 @@
 """Main PR prompt generator."""
 
+from pathlib import Path
 from typing import Optional
 
 from .diff_parser import clean_file_diffs, parse_diff_by_files
@@ -32,11 +33,13 @@ class PrPromptGenerator:
             feature_branch: Feature branch with changes.
             pr_title: Optional PR title.
             pr_description: Optional PR description.
-            blacklist_patterns: File patterns to exclude from diff.
+            blacklist_patterns: File patterns to exclude from diff. Pattern "* *" is always added
             context_patterns: File patterns to always include in full.
             custom_instructions: Optional custom review instructions.
         """
         blacklist_patterns = blacklist_patterns or []
+        # Always exclude files with whitespace in their names
+        blacklist_patterns.append("* *")
         git = GitClient()
 
         git.fetch_branch(target_branch)
@@ -59,7 +62,7 @@ class PrPromptGenerator:
             all_files = git.list_files(feature_branch)
             context_file_paths = FileFilter.match(all_files, context_patterns)
             context_files = {
-                str(file_path): git.get_file_content(feature_branch, file_path)
+                file_path: git.get_file_content(feature_branch, file_path)
                 for file_path in context_file_paths
             }
             builder.add_context_files(context_files)
