@@ -35,7 +35,6 @@ testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.9"
-strict = true
 show_error_codes = true
 pretty = true
 

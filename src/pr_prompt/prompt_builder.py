@@ -48,7 +48,6 @@ Focus on actionable feedback that improves code quality and maintainability."""
 
     def add_instructions(self, instructions: Optional[str] = None) -> None:
         instructions = instructions or self.DEFAULT_INSTRUCTIONS
-        """Add the review instructions section."""
         self.sections.append(
             PromptSection(
                 title="Pull Request Review Instructions", content=instructions
@@ -59,6 +58,7 @@ Focus on actionable feedback that improves code quality and maintainability."""
         self,
         target_branch: str,
         feature_branch: str,
+        *,
         commit_messages: list[str],
         pr_title: Optional[str],
         pr_description: Optional[str],
@@ -88,7 +88,7 @@ Focus on actionable feedback that improves code quality and maintainability."""
                 )
             )
 
-    def add_changed_files(self, files: list[Path]) -> None:
+    def add_changed_files(self, files: list[str]) -> None:
         file_tree = build_file_tree(files) if files else "No files changed"
 
         self.sections.append(

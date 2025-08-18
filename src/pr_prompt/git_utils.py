@@ -1,7 +1,6 @@
 """Git command utilities."""
 
 import subprocess
-from pathlib import Path
 from typing import Optional
 
 
@@ -12,8 +11,11 @@ class GitClient:
     def run(*args: str) -> str:
         """Run a git command and return its output."""
         try:
-            result = subprocess.run(
-                ["git", *args], capture_output=True, text=True, check=True
+            result = subprocess.run(  # noqa: S603
+                ["git", *args],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=True,
             )
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
@@ -60,7 +62,7 @@ class GitClient:
         self,
         target_branch: str,
         feature_branch: str,
-    ) -> dict[str, str]:
+    ) -> str:
         """
         Get git diff between two refs.
 

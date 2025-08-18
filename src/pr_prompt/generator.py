@@ -1,6 +1,5 @@
 """Main PR prompt generator."""
 
-from pathlib import Path
 from typing import Optional
 
 from .diff_parser import clean_file_diffs, parse_diff_by_files
@@ -19,6 +18,7 @@ class PrPromptGenerator:
         self,
         target_branch: str,
         feature_branch: str,
+        *,
         custom_instructions: Optional[str] = None,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
@@ -53,9 +53,9 @@ class PrPromptGenerator:
         builder.add_metadata(
             target_branch,
             feature_branch,
-            commit_messages,
-            pr_title,
-            pr_description,
+            commit_messages=commit_messages,
+            pr_title=pr_title,
+            pr_description=pr_description,
         )
 
         if context_patterns:

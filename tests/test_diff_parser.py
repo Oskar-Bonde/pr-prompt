@@ -347,8 +347,8 @@ index 000..789 100644
         }
 
         result = clean_file_diffs(file_diffs)
-
-        assert len(result) == 2
+        files_in_diff = 2
+        assert len(result) == files_in_diff
         assert "file1.py" in result
         assert "file2.py" in result
 
@@ -430,7 +430,7 @@ index 123..456 100644
 -old
 +new"""
 
-        file_whitelist = [Path("file.py")]
+        file_whitelist = ["file.py"]
 
         # This should raise an exception due to malformed header
         with pytest.raises(ValueError, match="Expected 'b/' prefix in diff header"):
@@ -438,7 +438,7 @@ index 123..456 100644
 
     def test_empty_diff_string(self) -> None:
         """Test handling of empty diff string."""
-        result = parse_diff_by_files("", [Path("any_file.py")])
+        result = parse_diff_by_files("", ["any_file.py"])
         assert len(result) == 0
 
     def test_diff_header_only_no_content(self) -> None:

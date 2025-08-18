@@ -18,7 +18,7 @@ min-public-methods = 1
 
 max-line-length = 150
 
-[tool.pylint."messages control"]
+[tool.pylint.messages_control]
 
 # Disable the message, report, category or checker with the given id(s).
 disable = [
