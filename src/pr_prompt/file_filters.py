@@ -1,5 +1,3 @@
-"""File filtering utilities."""
-
 import fnmatch
 
 

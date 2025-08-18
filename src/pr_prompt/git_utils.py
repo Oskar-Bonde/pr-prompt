@@ -1,12 +1,8 @@
-"""Git command utilities."""
-
 import subprocess
 from typing import Optional
 
 
 class GitClient:
-    """Wrapper for git operations."""
-
     @staticmethod
     def run(*args: str) -> str:
         """Run a git command and return its output."""

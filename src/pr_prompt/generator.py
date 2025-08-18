@@ -1,5 +1,3 @@
-"""Main PR prompt generator."""
-
 from dataclasses import dataclass
 from typing import Optional
 
