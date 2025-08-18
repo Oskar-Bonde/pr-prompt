@@ -1,5 +1,6 @@
 """Main PR prompt generator."""
 
+from dataclasses import dataclass
 from typing import Optional
 
 from .diff_parser import clean_file_diffs, parse_diff_by_files
@@ -11,9 +12,6 @@ from .prompt_builder import PromptBuilder
 class PrPromptGenerator:
     """Generator for pull request review prompts."""
 
-    def __init__(self, max_diff_chars: int = 50000):
-        self.max_diff_chars = max_diff_chars
-
     def generate(
         self,
         target_branch: str,
@@ -24,18 +22,20 @@ class PrPromptGenerator:
         pr_description: Optional[str] = None,
         blacklist_patterns: Optional[list[str]] = None,
         context_patterns: Optional[list[str]] = None,
+        diff_context_lines: Optional[int] = 999999,
     ) -> str:
         """
         Generate a pull request review prompt.
 
         Args:
             target_branch: Base branch (e.g. `origin/main`).
-            feature_branch: Feature branch with changes.
+            feature_branch: Feature branch with changes (e.g., 'feature-branch').
+            custom_instructions: Optional custom review instructions.
             pr_title: Optional PR title.
             pr_description: Optional PR description.
-            blacklist_patterns: File patterns to exclude from diff. Pattern "* *" is always added
+            blacklist_patterns: File patterns to exclude from diff.
             context_patterns: File patterns to always include in full.
-            custom_instructions: Optional custom review instructions.
+            diff_context_lines: Number of context lines to include in the diff.
         """
         blacklist_patterns = blacklist_patterns or []
         # Always exclude files with whitespace in their names
@@ -71,7 +71,7 @@ class PrPromptGenerator:
         builder.add_changed_files(changed_files)
 
         file_whitelist = FileFilter.exclude(changed_files, blacklist_patterns)
-        diff = git.get_diff(target_branch, feature_branch)
+        diff = git.get_diff(target_branch, feature_branch, diff_context_lines)
         file_diffs = parse_diff_by_files(diff, file_whitelist)
         cleaned_diffs = clean_file_diffs(file_diffs)
         builder.add_file_diffs(cleaned_diffs)

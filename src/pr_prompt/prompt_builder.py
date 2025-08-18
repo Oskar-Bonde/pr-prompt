@@ -38,21 +38,11 @@ Your task:
 Focus on actionable feedback that improves code quality and maintainability."""
 
     def __init__(self) -> None:
-        """
-        Initialize the prompt builder.
-
-        Args:
-            instructions: Optional custom review instructions.
-        """
         self.sections: list[PromptSection] = []
 
     def add_instructions(self, instructions: Optional[str] = None) -> None:
         instructions = instructions or self.DEFAULT_INSTRUCTIONS
-        self.sections.append(
-            PromptSection(
-                title="Pull Request Review Instructions", content=instructions
-            )
-        )
+        self.sections.append(PromptSection(title="Instructions", content=instructions))
 
     def add_metadata(
         self,

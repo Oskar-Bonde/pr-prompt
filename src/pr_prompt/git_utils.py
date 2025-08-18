@@ -45,16 +45,6 @@ class GitClient:
         return None, branch
 
     def get_changed_files(self, target_branch: str, feature_branch: str) -> list[str]:
-        """
-        Get list of files changed between two refs.
-
-        Args:
-            target_branch: Base reference (e.g., 'origin/main').
-            feature_branch: Head reference (e.g., 'feature-branch').
-
-        Returns:
-            list of changed file paths.
-        """
         output = self.run("diff", "--name-only", f"{target_branch}...{feature_branch}")
         return output.splitlines() if output else []
 
@@ -62,17 +52,11 @@ class GitClient:
         self,
         target_branch: str,
         feature_branch: str,
+        context_lines: int,
     ) -> str:
-        """
-        Get git diff between two refs.
-
-        Args:
-            target_branch: Base reference.
-            feature_branch: Head reference.
-        """
         return self.run(
             "diff",
-            "--unified=999999",
+            f"--unified={context_lines}",
             "--diff-algorithm=histogram",
             "--function-context",
             "--find-renames=50",
