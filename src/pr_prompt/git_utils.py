@@ -44,14 +44,16 @@ class GitClient:
                 return branch_parts[0], branch_parts[1]
         return None, branch
 
-    def get_commit_messages(self, target_branch: str, feature_branch: str) -> list[str]:
+    @classmethod
+    def get_commit_messages(cls, target_branch: str, feature_branch: str) -> list[str]:
         """Get list of commit messages between two refs."""
-        output = self.run(
+        output = cls.run(
             "log", "--pretty=format:%s", f"{target_branch}..{feature_branch}"
         )
         return output.splitlines() if output else []
 
-    def get_repo_name(self) -> str:
+    @classmethod
+    def get_repo_name(cls) -> str:
         """
         Get the repository name from the remote URL.
 
@@ -59,7 +61,7 @@ class GitClient:
             SSH: git@github.com:user/repo.git -> repo
             HTTPS: https://github.com/user/repo.git -> repo
         """
-        remote_url = self.run("remote", "get-url", "origin")
+        remote_url = cls.run("remote", "get-url", "origin")
         repo_name = remote_url.split("/")[-1]
         return repo_name.removesuffix(".git")
 

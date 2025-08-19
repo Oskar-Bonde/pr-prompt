@@ -22,7 +22,7 @@ class PrPromptGenerator:
     Example:
         ```python
         generator = PrPromptGenerator(
-            blacklist_patterns=["*.lock", "*.log", "dist/*"],
+            blacklist_patterns=["*.lock"],
             context_patterns=[".github/copilot-instructions.md"],
             include_commit_messages=True,
         )
@@ -35,22 +35,31 @@ class PrPromptGenerator:
         ```
 
     Attributes:
-        instructions: Overwrite prompt instructions.
         blacklist_patterns: File patterns to exclude from the diff analysis.
             Files with space are always excluded `"* *"`.
-            Default: `["*.lock", "*.log"]`.
-        context_patterns: File patterns to include in full content (not just diffs).
+        context_patterns: Patterns to select context files to include in prompt.
             Useful for including documentation that provide context for the review.
         diff_context_lines: Number of context lines around changes in diffs.
-            Default: `999999` to include full file context.
+            Includes full file context by default.
         include_commit_messages: Whether to include commit messages in the prompt.
             Default: `True`.
     """
 
-    # Content settings
-    instructions: Optional[
-        str
-    ] = """You are an expert software engineer reviewing a pull request.
+    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
+    context_patterns: list[str] = field(default_factory=lambda: ["LLM.md"])
+
+    diff_context_lines: int = 999999
+    include_commit_messages: bool = True
+
+    def generate_review(
+        self,
+        target_branch: str,
+        feature_branch: Optional[str] = None,
+        pr_title: Optional[str] = None,
+        pr_description: Optional[str] = None,
+    ) -> str:
+        """Generate a prompt for reviewing a pull request."""
+        instructions = """You are an expert software engineer reviewing a pull request.
 
 Your task:
  - Identify Issues: Find potential bugs, security vulnerabilities, and performance problems
@@ -59,34 +68,53 @@ Your task:
  - Be Specific: Reference line numbers and provide concrete examples
 
 Focus on actionable feedback that improves code quality and maintainability."""
+        return self._generate(
+            instructions, target_branch, feature_branch, pr_title, pr_description
+        )
 
-    # File filtering
-    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock", "*.log"])
-    context_patterns: list[str] = field(default_factory=list)
-
-    # Advanced options
-    diff_context_lines: int = 999999
-    include_commit_messages: bool = True
-
-    def generate(
+    def generate_description(
         self,
+        target_branch: str,
+        feature_branch: Optional[str] = None,
+        pr_title: Optional[str] = None,
+    ) -> str:
+        """Generate a prompt for creating PR descriptions."""
+        instructions = """You are an expert software engineer writing a pull request description.
+
+Your task:
+ - Summarize Changes: Describe what this PR accomplishes
+ - Explain Context: Why these changes were needed
+ - Document Impact: What areas of the codebase are affected
+ - Note Breaking Changes: Highlight any breaking changes or migration steps
+ - Be Clear: Write for other developers who will review and maintain this code
+
+Create a clear, comprehensive PR description that helps reviewers understand the changes."""
+        return self._generate(
+            instructions, target_branch, feature_branch, pr_title, None
+        )
+
+    def generate_custom(
+        self,
+        instructions: str,
         target_branch: str,
         feature_branch: Optional[str] = None,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
-        """
-        Generate a pull request review prompt.
+        """Generate a pull request prompt with custom instructions."""
+        return self._generate(
+            instructions, target_branch, feature_branch, pr_title, pr_description
+        )
 
-        Args:
-            target_branch: Base branch (e.g. `origin/main`, `origin/master`).
-            feature_branch: Feature branch with changes. Auto-detects if None.
-            pr_title: Optional pull request title.
-            pr_description: Optional pull request description.
-
-        Returns:
-            A formatted prompt for LLM pull request review.
-        """
+    def _generate(
+        self,
+        instructions: str,
+        target_branch: str,
+        feature_branch: Optional[str] = None,
+        pr_title: Optional[str] = None,
+        pr_description: Optional[str] = None,
+    ) -> str:
+        """Generate a pull request prompt."""
         git = GitClient()
 
         if not feature_branch:
@@ -96,17 +124,12 @@ Focus on actionable feedback that improves code quality and maintainability."""
 
         builder = PromptBuilder()
 
-        builder.add_instructions(self.instructions)
-
-        if self.include_commit_messages:
-            commit_messages = git.get_commit_messages(target_branch, feature_branch)
-        else:
-            commit_messages = []
+        builder.add_instructions(instructions)
 
         builder.add_metadata(
             target_branch,
             feature_branch,
-            commit_messages=commit_messages,
+            include_commit_messages=self.include_commit_messages,
             pr_title=pr_title,
             pr_description=pr_description,
         )

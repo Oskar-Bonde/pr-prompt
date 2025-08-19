@@ -37,7 +37,7 @@ class PromptBuilder:
         target_branch: str,
         feature_branch: str,
         *,
-        commit_messages: list[str],
+        include_commit_messages: bool,
         pr_title: Optional[str],
         pr_description: Optional[str],
     ) -> None:
@@ -56,8 +56,12 @@ class PromptBuilder:
         if pr_description:
             content_parts.append(f"**Description:**\n\n{pr_description}")
 
-        commits_text = "\n".join(f" - {msg}" for msg in commit_messages)
-        content_parts.append(f"**Commits:**\n{commits_text}")
+        if include_commit_messages:
+            commit_messages = GitClient.get_commit_messages(
+                target_branch, feature_branch
+            )
+            commits_text = "\n".join(f" - {msg}" for msg in commit_messages)
+            content_parts.append(f"**Commits:**\n{commits_text}")
 
         if content_parts:
             self.sections.append(
