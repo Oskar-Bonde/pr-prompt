@@ -74,7 +74,7 @@ class TestPromptBuilder:
         builder.add_metadata(
             target_branch="main",
             feature_branch="bugfix/authentication",
-            commit_messages=[],
+            include_commit_messages=False,
             pr_title="Fix bug in authentication",
             pr_description=None,
         )
@@ -165,9 +165,10 @@ class TestPRPromptGenerator:
     def test_default_initialization(self) -> None:
         """Test generator initializes with defaults."""
         generator = PrPromptGenerator()
-        default_max_diff = 50000
-        assert generator.max_diff_chars == default_max_diff
+        diff_context_lines = 999999
+        assert generator.diff_context_lines == diff_context_lines
 
+    @patch.object(GitClient, "list_files")
     @patch.object(GitClient, "fetch_branch")
     @patch.object(GitClient, "get_changed_files")
     @patch.object(GitClient, "get_diff")
@@ -178,6 +179,7 @@ class TestPRPromptGenerator:
         mock_diff: MagicMock,
         mock_files: MagicMock,
         mock_fetch: MagicMock,
+        mock_list: MagicMock,
     ) -> None:
         """Test basic prompt generation."""
         mock_files.return_value = ["main.py", "test.py"]
@@ -185,7 +187,7 @@ class TestPRPromptGenerator:
         mock_commit_messages.return_value = ["Initial commit"]
 
         generator = PrPromptGenerator()
-        prompt = generator.generate(
+        prompt = generator.generate_review(
             target_branch="origin/main",
             feature_branch="feature/test",
             pr_title="Test PR",
@@ -195,6 +197,7 @@ class TestPRPromptGenerator:
         assert "main.py" in prompt
         assert "File diffs" in prompt
 
+    @patch.object(GitClient, "list_files")
     @patch.object(GitClient, "fetch_branch")
     @patch.object(GitClient, "get_changed_files")
     @patch.object(GitClient, "get_diff")
@@ -205,6 +208,7 @@ class TestPRPromptGenerator:
         mock_diff: MagicMock,
         mock_files: MagicMock,
         mock_fetch: MagicMock,
+        mock_list: MagicMock,
     ) -> None:
         """Test generation with blacklisted files."""
         mock_files.return_value = [
@@ -222,11 +226,10 @@ index a8b605e888..f0b1ecbba9 100644
 
         mock_commit_messages.return_value = ["Fix bug"]
 
-        generator = PrPromptGenerator()
-        prompt = generator.generate(
+        generator = PrPromptGenerator(blacklist_patterns=["*lock.json"])
+        prompt = generator.generate_review(
             target_branch="origin/main",
             feature_branch="feature_test",
-            blacklist_patterns=["*lock.json"],
         )
 
         # All files should be listed
