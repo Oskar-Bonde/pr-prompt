@@ -29,7 +29,7 @@ class PromptBuilder:
     def __init__(self) -> None:
         self.sections: list[PromptSection] = []
 
-    def add_instructions(self, instructions: Optional[str] = None) -> None:
+    def add_instructions(self, instructions: str) -> None:
         self.sections.append(PromptSection(title="Instructions", content=instructions))
 
     def add_metadata(

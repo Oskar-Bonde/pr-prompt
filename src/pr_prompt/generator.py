@@ -55,6 +55,7 @@ class PrPromptGenerator:
         self,
         target_branch: str,
         feature_branch: Optional[str] = None,
+        *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
@@ -98,6 +99,7 @@ Create a clear, comprehensive PR description that helps reviewers understand the
         instructions: str,
         target_branch: str,
         feature_branch: Optional[str] = None,
+        *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
@@ -106,7 +108,7 @@ Create a clear, comprehensive PR description that helps reviewers understand the
             instructions, target_branch, feature_branch, pr_title, pr_description
         )
 
-    def _generate(
+    def _generate(  # pylint: disable=too-many-positional-arguments
         self,
         instructions: str,
         target_branch: str,
@@ -119,6 +121,7 @@ Create a clear, comprehensive PR description that helps reviewers understand the
 
         if not feature_branch:
             feature_branch = git.get_current_branch()
+
         git.fetch_branch(target_branch)
         git.fetch_branch(feature_branch)
 
