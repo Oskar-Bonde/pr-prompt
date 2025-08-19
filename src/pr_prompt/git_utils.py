@@ -51,6 +51,18 @@ class GitClient:
         )
         return output.splitlines() if output else []
 
+    def get_repo_name(self) -> str:
+        """
+        Get the repository name from the remote URL.
+
+        Examples:
+            SSH: git@github.com:user/repo.git -> repo
+            HTTPS: https://github.com/user/repo.git -> repo
+        """
+        remote_url = self.run("remote", "get-url", "origin")
+        repo_name = remote_url.split("/")[-1]
+        return repo_name.removesuffix(".git")
+
     def list_files(self, ref: str) -> list[str]:
         """List all files in the repository at a specific ref."""
         output = self.run("ls-tree", "-r", "--name-only", ref)

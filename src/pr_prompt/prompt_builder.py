@@ -4,6 +4,7 @@ from typing import Optional
 
 from .diff_parser import DiffFile
 from .file_tree import build_file_tree
+from .git_utils import GitClient
 
 
 @dataclass
@@ -43,7 +44,8 @@ class PromptBuilder:
         """Add PR metadata section."""
         content_parts = []
 
-        repo_name = Path().cwd().name
+        repo_name = GitClient.get_repo_name()
+
         content_parts.append(f"**Repository:** {repo_name}")
 
         content_parts.append(f"**Branch:** `{feature_branch}` -> `{target_branch}`")
