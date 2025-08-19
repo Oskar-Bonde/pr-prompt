@@ -1,19 +1,12 @@
 [project]
 name = "pr-prompt"
 version = "0.1.0"
-description = "A Python CLI tool that uses Amazon Bedrock (Claude) to review Azure DevOps pull requests"
+description = "A tool to generate pull request prompts using git cli commands."
 authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-    "azure-devops>=7.0.0",
-    "boto3>=1.40.0",
-    "click>=8.1.7",
-    "gitingest>=0.3.1",
-    "requests>=2.31.0",
-    "rich>=13.7.0",
-]
+dependencies = []
 
 [dependency-groups]
 dev = [
@@ -26,18 +19,85 @@ dev = [
     "ruff",
 ]
 
-[project.scripts]
-bedrock-reviewer = "bedrock_reviewer.cli:main"
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# ===================== ruff =====================
+
+[tools.ruff]
+target-version = "py39"
+
+[tools.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN204", # missing return type special method
+    "COM",    # missing trailing comma
+    "D1",     # missing docstring
+    "D203",   # 1 blank line required before class docstring
+    "D212",   # multi-line docstring summary should start at the second line
+    "D413",   # missing blank line after last section in docstring
+    "E501",   # line too long
+    "EXE002", # executable python files must have a shebang line like `#!/usr/bin/env python`
+    "FA100",
+    "TD",     # flake8-todos
+    "TID252", # prefer absolute imports over relative imports from parent modules
+    "TRY003", # avoid specifying long messages outside the exception class
+    "UP045",  # use `X | None` for type annotations instead of `Optional[X]`
+]
+pylint.max-args = 6
+explicit-preview-rules = true
+
+[tools.ruff.lint.per-file-ignores]
+"**/tests/**" = [
+    "ARG",  # Unused argument. False positive in tests.
+    "C901", # McCabe name complexity
+    "S",    # bandit
+    "T20",  # print is not allowed
+]
+
+[tools.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+# ===================== pylint =====================
+
+[tool.pylint.main]
+load-plugins = ["pylint_pytest"]
+
+[tool.pylint.design]
+max-args = 6
+max-positional-arguments = 3
+min-public-methods = 1
+
+[tool.pylint.format]
+max-line-length = 150
+
+[tool.pylint.messages_control]
+disable = [
+    "logging-fstring-interpolation,",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
+enable = ["useless-suppression"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 15
+
+[tool.pylint.variables]
+ignored-argument-names = "^self$|^cls$|^scope$|^construct_id$|_.*"
+
+# ==================== pytest ====================
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
 testpaths = ["tests"]
+
+# ===================== mypy =====================
 
 [tool.mypy]
 python_version = "3.9"
 show_error_codes = true
 pretty = true
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
