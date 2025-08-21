@@ -6,7 +6,9 @@ authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "gitpython>=3.1.45",
+]
 
 [dependency-groups]
 dev = [
@@ -25,10 +27,10 @@ build-backend = "setuptools.build_meta"
 
 # ===================== ruff =====================
 
-[tools.ruff]
+[tool.ruff]
 target-version = "py39"
 
-[tools.ruff.lint]
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = [
     "ANN204", # missing return type special method
@@ -48,7 +50,7 @@ ignore = [
 pylint.max-args = 6
 explicit-preview-rules = true
 
-[tools.ruff.lint.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "**/tests/**" = [
     "ARG",  # Unused argument. False positive in tests.
     "C901", # McCabe name complexity
@@ -56,7 +58,7 @@ explicit-preview-rules = true
     "T20",  # print is not allowed
 ]
 
-[tools.ruff.format]
+[tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
@@ -100,4 +102,3 @@ testpaths = ["tests"]
 python_version = "3.9"
 show_error_codes = true
 pretty = true
-
