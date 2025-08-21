@@ -5,38 +5,15 @@ class FileFilter:
     """Utility class for filtering files based on patterns."""
 
     @staticmethod
-    def exclude(files: list[str], patterns: list[str]) -> list[str]:
-        """
-        Return file paths that don't match any of the given patterns.
-
-        Args:
-            files: list of file path strings.
-            patterns: list of glob patterns to exclude.
-
-        Returns:
-            Filtered list of file path strings.
-        """
+    def is_match(file_path: str, patterns: list[str]) -> bool:
+        """Check if a file path matches any of the given patterns."""
         if not patterns:
-            return files
-
-        return [
-            file
-            for file in files
-            if not any(fnmatch.fnmatch(file, pattern) for pattern in patterns)
-        ]
+            return False
+        return any(fnmatch.fnmatch(file_path, pattern) for pattern in patterns)
 
     @staticmethod
     def match(files: list[str], patterns: list[str]) -> list[str]:
-        """
-        Return files matching any of the given patterns.
-
-        Args:
-            files: list of file path strings.
-            patterns: list of glob patterns to match.
-
-        Returns:
-            Sorted list of unique matched files.
-        """
+        """Return sorted files matching any of the given patterns."""
         if not patterns:
             return []
 

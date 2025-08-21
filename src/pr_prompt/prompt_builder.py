@@ -1,8 +1,11 @@
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
+from git import Diff, DiffIndex
+
+from pr_prompt.markdown_parser import get_markdown_content
 
 from .diff_parser import DiffFile
+from .file_filters import FileFilter
 from .file_tree import build_file_tree
 from .git_utils import GitClient
 
@@ -26,7 +29,8 @@ class PromptSection:
 class PromptBuilder:
     """Builds structured prompts for pull request review."""
 
-    def __init__(self) -> None:
+    def __init__(self, git_client: GitClient) -> None:
+        self.git_client = git_client
         self.sections: list[PromptSection] = []
 
     def add_instructions(self, instructions: str) -> None:
@@ -34,8 +38,6 @@ class PromptBuilder:
 
     def add_metadata(
         self,
-        target_branch: str,
-        feature_branch: str,
         *,
         include_commit_messages: bool,
         pr_title: Optional[str],
@@ -44,11 +46,11 @@ class PromptBuilder:
         """Add PR metadata section."""
         content_parts = []
 
-        repo_name = GitClient.get_repo_name()
+        content_parts.append(f"**Repository:** {self.git_client.get_repo_name()}")
 
-        content_parts.append(f"**Repository:** {repo_name}")
-
-        content_parts.append(f"**Branch:** `{feature_branch}` -> `{target_branch}`")
+        content_parts.append(
+            f"**Branch:** `{self.git_client.feature_branch}` -> `{self.git_client.target_branch}`"
+        )
 
         if pr_title:
             content_parts.append(f"**Title:** {pr_title}")
@@ -57,21 +59,45 @@ class PromptBuilder:
             content_parts.append(f"**Description:**\n\n{pr_description}")
 
         if include_commit_messages:
-            commit_messages = GitClient.get_commit_messages(
-                target_branch, feature_branch
-            )
+            commit_messages = self.git_client.get_commit_messages()
             commits_text = "\n".join(f" - {msg}" for msg in commit_messages)
             content_parts.append(f"**Commits:**\n{commits_text}")
 
-        if content_parts:
+        self.sections.append(
+            PromptSection(
+                title="Pull Request Details",
+                content="\n\n".join(content_parts),
+            )
+        )
+
+    def add_context_files(self, context_patterns: list[str]) -> None:
+        """Add a context files section with a main heading and sub-headings for each file."""
+        if not context_patterns:
+            return
+
+        all_files = self.git_client.list_files(self.git_client.feature_branch)
+        context_file_paths = FileFilter.match(all_files, context_patterns)
+
+        if not context_file_paths:
+            return
+
+        self.sections.append(PromptSection(title="Context Files"))
+        for file_path in context_file_paths:
+            content = self.git_client.get_file_content(
+                self.git_client.feature_branch, file_path
+            )
+            content_md = get_markdown_content(file_path, content)
             self.sections.append(
                 PromptSection(
-                    title="Pull Request Details",
-                    content="\n\n".join(content_parts),
+                    title=f"File: `{file_path}`",
+                    content=content_md,
+                    heading_level=3,
                 )
             )
 
-    def add_changed_files(self, files: list[str]) -> None:
+    def add_changed_files(self, diff_index: DiffIndex[Diff]) -> None:
+        """Add changed files in a tree format."""
+        files = [diff.b_path or diff.a_path for diff in diff_index]
         file_tree = build_file_tree(files) if files else "No files changed"
 
         self.sections.append(
@@ -90,61 +116,11 @@ class PromptBuilder:
 
             self.sections.append(
                 PromptSection(
-                    title=f"{diff_file.operation_type.value} `{file_path}`",
+                    title=f"{diff_file.change_type} `{file_path}`",
                     content=content,
                     heading_level=3,
                 )
             )
-
-    def add_context_files(self, context_files: dict[str, str]) -> None:
-        """Add a context files section with a main heading and sub-headings for each file."""
-        self.sections.append(PromptSection(title="Context Files"))
-        for file_path, content in context_files.items():
-            content_md = self.get_markdown_content(file_path, content)
-            self.sections.append(
-                PromptSection(
-                    title=f"File: `{file_path}`",
-                    content=content_md,
-                    heading_level=3,
-                )
-            )
-
-    def get_markdown_content(self, file_path: str, content: str) -> str:
-        extension = Path(file_path).suffix[1:]
-        lang_map = {
-            "py": "python",
-            "js": "javascript",
-            "ts": "typescript",
-            "jsx": "jsx",
-            "tsx": "tsx",
-            "java": "java",
-            "go": "go",
-            "rs": "rust",
-            "cpp": "cpp",
-            "c": "c",
-            "cs": "csharp",
-            "rb": "ruby",
-            "php": "php",
-            "swift": "swift",
-            "kt": "kotlin",
-            "scala": "scala",
-            "sh": "bash",
-            "yml": "yaml",
-            "yaml": "yaml",
-            "json": "json",
-            "xml": "xml",
-            "html": "html",
-            "css": "css",
-            "sql": "sql",
-            "md": "markdown",
-        }
-        lang = lang_map.get(extension, "text")
-
-        if lang == "markdown":
-            content = f"~~~{lang}\n{content}\n~~~"
-        else:
-            content = f"```{lang}\n{content}\n```"
-        return content
 
     def build(self) -> str:
         """Build the final prompt."""

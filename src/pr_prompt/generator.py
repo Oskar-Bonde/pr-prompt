@@ -5,8 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .diff_parser import clean_file_diffs, parse_diff_by_files
-from .file_filters import FileFilter
+from .diff_parser import get_diff_files
 from .git_utils import GitClient
 from .prompt_builder import PromptBuilder
 
@@ -51,6 +50,11 @@ class PrPromptGenerator:
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
 
+    def __post_init__(self):
+        """Always exclude files with whitespace in their names."""
+        if "* *" not in self.blacklist_patterns:
+            self.blacklist_patterns.append("* *")
+
     def generate_review(
         self,
         target_branch: str,
@@ -91,7 +95,7 @@ Your task:
 
 Create a clear, comprehensive PR description that helps reviewers understand the changes."""
         return self._generate(
-            instructions, target_branch, feature_branch, pr_title, None
+            instructions, target_branch, feature_branch, pr_title, pr_description=None
         )
 
     def generate_custom(
@@ -117,46 +121,27 @@ Create a clear, comprehensive PR description that helps reviewers understand the
         pr_description: Optional[str] = None,
     ) -> str:
         """Generate a pull request prompt."""
-        git = GitClient()
-
-        if not feature_branch:
-            feature_branch = git.get_current_branch()
+        git = GitClient(target_branch, feature_branch)
 
         git.fetch_branch(target_branch)
-        git.fetch_branch(feature_branch)
 
-        builder = PromptBuilder()
+        builder = PromptBuilder(git)
 
         builder.add_instructions(instructions)
 
         builder.add_metadata(
-            target_branch,
-            feature_branch,
             include_commit_messages=self.include_commit_messages,
             pr_title=pr_title,
             pr_description=pr_description,
         )
 
-        if self.context_patterns:
-            all_files = git.list_files(feature_branch)
-            context_file_paths = FileFilter.match(all_files, self.context_patterns)
-            context_files = {
-                file_path: git.get_file_content(feature_branch, file_path)
-                for file_path in context_file_paths
-            }
-            builder.add_context_files(context_files)
+        builder.add_context_files(self.context_patterns)
 
-        changed_files = git.get_changed_files(target_branch, feature_branch)
-        builder.add_changed_files(changed_files)
+        diff_index = git.get_diff_index(self.diff_context_lines)
 
-        blacklist_patterns = self.blacklist_patterns.copy()
-        # Always exclude files with whitespace in their names
-        blacklist_patterns.append("* *")
+        builder.add_changed_files(diff_index)
 
-        file_whitelist = FileFilter.exclude(changed_files, blacklist_patterns)
-        diff = git.get_diff(target_branch, feature_branch, self.diff_context_lines)
-        file_diffs = parse_diff_by_files(diff, file_whitelist)
-        cleaned_diffs = clean_file_diffs(file_diffs)
-        builder.add_file_diffs(cleaned_diffs)
+        diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+        builder.add_file_diffs(diff_files)
 
         return builder.build()

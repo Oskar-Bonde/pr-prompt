@@ -5,7 +5,7 @@ import pytest
 from pr_prompt.diff_parser import (
     DiffOperation,
     clean_diff_content,
-    clean_file_diffs,
+    get_diff_files,
     extract_diff_content,
     extract_file_path_from_diff_header,
     parse_diff_by_files,
@@ -346,14 +346,14 @@ index 000..789 100644
 +added content""",
         }
 
-        result = clean_file_diffs(file_diffs)
+        result = get_diff_files(file_diffs)
         files_in_diff = 2
         assert len(result) == files_in_diff
         assert "file1.py" in result
         assert "file2.py" in result
 
-        assert result["file1.py"].operation_type == DiffOperation.MODIFIED
-        assert result["file2.py"].operation_type == DiffOperation.ADDED
+        assert result["file1.py"].change_type == DiffOperation.MODIFIED
+        assert result["file2.py"].change_type == DiffOperation.ADDED
 
         assert "old" in result["file1.py"].content
         assert "new" in result["file1.py"].content
@@ -361,7 +361,7 @@ index 000..789 100644
 
     def test_clean_empty_dict(self) -> None:
         """Test cleaning empty file diffs dictionary."""
-        result = clean_file_diffs({})
+        result = get_diff_files({})
         assert len(result) == 0
 
     def test_all_operation_types(self) -> None:
@@ -404,14 +404,14 @@ index 123..456 100644
 +new""",
         }
 
-        result = clean_file_diffs(file_diffs)
+        result = get_diff_files(file_diffs)
 
-        assert result["modified.py"].operation_type == DiffOperation.MODIFIED
-        assert result["added.py"].operation_type == DiffOperation.ADDED
-        assert result["deleted.py"].operation_type == DiffOperation.DELETED
-        assert result["renamed.py"].operation_type == DiffOperation.RENAMED
+        assert result["modified.py"].change_type == DiffOperation.MODIFIED
+        assert result["added.py"].change_type == DiffOperation.ADDED
+        assert result["deleted.py"].change_type == DiffOperation.DELETED
+        assert result["renamed.py"].change_type == DiffOperation.RENAMED
         assert (
-            result["renamed_modified.py"].operation_type
+            result["renamed_modified.py"].change_type
             == DiffOperation.RENAMED_AND_MODIFIED
         )
 
