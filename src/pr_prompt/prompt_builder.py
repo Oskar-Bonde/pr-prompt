@@ -98,7 +98,11 @@ class PromptBuilder:
 
     def add_changed_files(self, diff_index: DiffIndex[Diff]) -> None:
         """Add changed files in a tree format."""
-        files = [diff.b_path or diff.a_path for diff in diff_index]
+        files = [
+            path
+            for diff in diff_index
+            if (path := diff.b_path or diff.a_path) is not None
+        ]
         file_tree = build_file_tree(files) if files else "No files changed"
 
         self.sections.append(

@@ -44,12 +44,15 @@ def get_diff_files(
     return diff_files
 
 
-def get_diff_content(diff: Diff) -> DiffFile:
+def get_diff_content(diff: Diff) -> str:
     content = ""
     if diff.rename_from and diff.rename_to:
         content += f"\nfile renamed from {diff.rename_from!r} to {diff.rename_to!r}"
-    content += "\n---"
-    content += diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff
+    if diff.diff:
+        content += "\n---"
+        content += (
+            diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff
+        )
     return content.strip()
 
 
@@ -61,7 +64,7 @@ def get_change_type(diff: Diff) -> ChangeType:
     if diff.copied_file:
         return ChangeType.COPIED
     if diff.renamed_file:
-        if diff.a_blob and diff.b_blob and diff.a_blob.hexsha == diff.b_blob.hexsha:
-            return ChangeType.RENAMED
-        return ChangeType.RENAMED_AND_MODIFIED
+        if diff.a_blob and diff.b_blob and diff.a_blob.hexsha != diff.b_blob.hexsha:
+            return ChangeType.RENAMED_AND_MODIFIED
+        return ChangeType.RENAMED
     return ChangeType.MODIFIED

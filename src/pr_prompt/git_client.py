@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from git import Diff, DiffIndex, Repo
+from git import Blob, Diff, DiffIndex, Repo
 
 
 class GitClient:
@@ -31,7 +31,11 @@ class GitClient:
     def get_commit_messages(self) -> list[str]:
         """Get list of commit messages between two refs."""
         commits = self.repo.iter_commits(f"{self.target_commit}..{self.feature_commit}")
-        return [". ".join(commit.message.strip().split("\n")) for commit in commits]
+        return [
+            ". ".join(commit.message.strip().split("\n"))
+            for commit in commits
+            if isinstance(commit.message, str)
+        ]
 
     def get_repo_name(self) -> str:
         return Path(self.repo.working_dir).name
@@ -39,7 +43,9 @@ class GitClient:
     def list_files(self, ref: str) -> list[str]:
         """List all files in the repository at a specific ref."""
         commit = self.repo.commit(ref)
-        return [item.path for item in commit.tree.traverse() if item.type == "blob"]
+        return [
+            str(item.path) for item in commit.tree.traverse() if isinstance(item, Blob)
+        ]
 
     def get_file_content(self, ref: str, file_path: str) -> str:
         commit = self.repo.commit(ref)
