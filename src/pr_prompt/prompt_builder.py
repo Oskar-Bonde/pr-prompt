@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+
 from git import Diff, DiffIndex
 
 from pr_prompt.markdown_parser import get_markdown_content
@@ -7,7 +8,7 @@ from pr_prompt.markdown_parser import get_markdown_content
 from .diff_parser import DiffFile
 from .file_filters import FileFilter
 from .file_tree import build_file_tree
-from .git_utils import GitClient
+from .git_client import GitClient
 
 
 @dataclass
@@ -60,7 +61,7 @@ class PromptBuilder:
 
         if include_commit_messages:
             commit_messages = self.git_client.get_commit_messages()
-            commits_text = "\n".join(f" - {msg}" for msg in commit_messages)
+            commits_text = "\n".join(f"- {msg}" for msg in commit_messages)
             content_parts.append(f"**Commits:**\n{commits_text}")
 
         self.sections.append(

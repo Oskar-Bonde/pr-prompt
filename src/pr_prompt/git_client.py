@@ -1,6 +1,7 @@
-from git import Repo, DiffIndex, Diff
-from typing import Optional
 from pathlib import Path
+from typing import Optional
+
+from git import Diff, DiffIndex, Repo
 
 
 class GitClient:
@@ -8,6 +9,7 @@ class GitClient:
         self,
         target_branch: str,
         feature_branch: Optional[str] = None,
+        *,
         repo_path: Optional[str] = None,
         remote: str = "origin",
     ):
@@ -32,7 +34,7 @@ class GitClient:
         return [". ".join(commit.message.strip().split("\n")) for commit in commits]
 
     def get_repo_name(self) -> str:
-        return Path(self.repo.working_tree_dir).name
+        return Path(self.repo.working_dir).name
 
     def list_files(self, ref: str) -> list[str]:
         """List all files in the repository at a specific ref."""

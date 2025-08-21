@@ -1,8 +1,8 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum
-import sys
+
 from git import Diff, DiffIndex
-from typing import Dict
 
 from .file_filters import FileFilter
 
@@ -31,7 +31,7 @@ class DiffFile:
 
 def get_diff_files(
     diffs: DiffIndex[Diff], blacklist_patterns: list[str]
-) -> Dict[str, DiffFile]:
+) -> dict[str, DiffFile]:
     """Convert GitPython Diff objects to DiffFile objects."""
     diff_files = {}
 
@@ -56,14 +56,12 @@ def get_diff_content(diff: Diff) -> DiffFile:
 def get_change_type(diff: Diff) -> ChangeType:
     if diff.new_file:
         return ChangeType.ADDED
-    elif diff.deleted_file:
+    if diff.deleted_file:
         return ChangeType.DELETED
-    elif diff.copied_file:
+    if diff.copied_file:
         return ChangeType.COPIED
-    elif diff.renamed_file:
+    if diff.renamed_file:
         if diff.a_blob and diff.b_blob and diff.a_blob.hexsha == diff.b_blob.hexsha:
             return ChangeType.RENAMED
-        else:
-            return ChangeType.RENAMED_AND_MODIFIED
-    else:
-        return ChangeType.MODIFIED
+        return ChangeType.RENAMED_AND_MODIFIED
+    return ChangeType.MODIFIED

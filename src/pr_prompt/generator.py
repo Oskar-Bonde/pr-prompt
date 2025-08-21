@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .diff_parser import get_diff_files
-from .git_utils import GitClient
+from .git_client import GitClient
 from .prompt_builder import PromptBuilder
 
 
@@ -51,7 +51,7 @@ class PrPromptGenerator:
     include_commit_messages: bool = True
 
     def __post_init__(self):
-        """Always exclude files with whitespace in their names."""
+        """Exclude files with whitespace in their names."""
         if "* *" not in self.blacklist_patterns:
             self.blacklist_patterns.append("* *")
 
@@ -67,10 +67,10 @@ class PrPromptGenerator:
         instructions = """You are an expert software engineer reviewing a pull request.
 
 Your task:
- - Identify Issues: Find potential bugs, security vulnerabilities, and performance problems
- - Suggest Improvements: Recommend refactorings and best practices
- - Assess Clarity: Point out unclear or overly complex code
- - Be Specific: Reference line numbers and provide concrete examples
+- Identify Issues: Find potential bugs, security vulnerabilities, and performance problems
+- Suggest Improvements: Recommend refactorings and best practices
+- Assess Clarity: Point out unclear or overly complex code
+- Be Specific: Reference line numbers and provide concrete examples
 
 Focus on actionable feedback that improves code quality and maintainability."""
         return self._generate(
@@ -87,11 +87,11 @@ Focus on actionable feedback that improves code quality and maintainability."""
         instructions = """You are an expert software engineer writing a pull request description.
 
 Your task:
- - Summarize Changes: Describe what this PR accomplishes
- - Explain Context: Why these changes were needed
- - Document Impact: What areas of the codebase are affected
- - Note Breaking Changes: Highlight any breaking changes or migration steps
- - Be Clear: Write for other developers who will review and maintain this code
+- Summarize Changes: Describe what this PR accomplishes
+- Explain Context: Why these changes were needed
+- Document Impact: What areas of the codebase are affected
+- Note Breaking Changes: Highlight any breaking changes or migration steps
+- Be Clear: Write for other developers who will review and maintain this code
 
 Create a clear, comprehensive PR description that helps reviewers understand the changes."""
         return self._generate(
