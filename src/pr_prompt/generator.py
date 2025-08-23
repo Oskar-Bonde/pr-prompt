@@ -1,26 +1,23 @@
-"""Generator for pull request review prompts."""
-
-from __future__ import annotations
+"""Generator for pull request prompts."""
 
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .diff_parser import get_diff_files
-from .git_client import GitClient
-from .prompt_builder import PromptBuilder
+from .markdown_builder import MarkdownBuilder
+from .utils import GitClient, get_diff_files
 
 
 @dataclass
 class PrPromptGenerator:
     """
-    Generator for pull request review prompts.
+    Generator for pull request prompts.
 
     This class creates formatted prompts for LLM review of pull requests by analyzing
     git diffs, commit messages, and file changes between branches.
 
     Example:
         ```python
-        generator = PrPromptGenerator(
+        generator = PrPrompt(
             blacklist_patterns=["*.lock"],
             context_patterns=[".github/copilot-instructions.md"],
             include_commit_messages=True,
@@ -119,7 +116,7 @@ Create a clear, comprehensive PR description that helps reviewers understand the
 
         git.fetch_branch(target_branch)
 
-        builder = PromptBuilder(git)
+        builder = MarkdownBuilder(git)
 
         builder.add_instructions(instructions)
 

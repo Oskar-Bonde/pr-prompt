@@ -2,14 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-from git import DiffIndex
-
-from pr_prompt.file_filters import FileFilter
 from pr_prompt.generator import PrPromptGenerator
-from pr_prompt.prompt_builder import PromptBuilder
+from pr_prompt.markdown_builder import MarkdownBuilder
+from pr_prompt.utils import FileFilter
 
-from .conftest import create_mock_diff, create_mock_git_client
+from .conftest import create_mock_git_client
 
 
 class TestFileFilter:
@@ -37,12 +34,12 @@ class TestFileFilter:
         ]
 
 
-class TestPromptBuilder:
+class TestMarkdownBuilder:
     """Test prompt building functionality."""
 
     def test_add_metadata_with_title_only(self, mock_git_client: MagicMock) -> None:
         """Test adding metadata with only title."""
-        builder = PromptBuilder(mock_git_client)
+        builder = MarkdownBuilder(mock_git_client)
         builder.add_metadata(
             include_commit_messages=False,
             pr_title="Fix bug in authentication",
@@ -62,7 +59,7 @@ class TestPromptBuilder:
             "README.md",
         ]
         mock_git = create_mock_git_client(files=files)
-        builder = PromptBuilder(mock_git)
+        builder = MarkdownBuilder(mock_git)
 
         builder.add_changed_files(mock_git.get_diff_index())
 
@@ -76,14 +73,14 @@ class TestPromptBuilder:
         """Test context file with appropriate syntax highlighting."""
         mock_git = create_mock_git_client(files=["main.py", "example.py"])
 
-        builder = PromptBuilder(mock_git)
+        builder = MarkdownBuilder(mock_git)
         builder.add_context_files(["example.py"])
 
         prompt = builder.build()
         assert "context file content" in prompt
 
 
-class TestPrPromptGenerator:
+class TestPrPrompt:
     """Test PR prompt generator."""
 
     def test_default_initialization(self) -> None:

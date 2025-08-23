@@ -26,6 +26,19 @@ dev = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+# ===================== bumpversion =====================
+
+[[tool.bumpversion.files]]
+filename = "src/pr_prompt/__init__.py"
+search = "__version__ = \"{current_version}\""
+replace = "__version__ = \"{new_version}\""
+
+# ==================== pytest ====================
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
 # ===================== ruff =====================
 
 [tool.ruff]
@@ -91,20 +104,9 @@ min-similarity-lines = 15
 [tool.pylint.variables]
 ignored-argument-names = "^self$|^cls$|^scope$|^construct_id$|_.*"
 
-# ==================== pytest ====================
-
-[tool.pytest.ini_options]
-addopts = "-ra -q"
-testpaths = ["tests"]
-
 # ===================== mypy =====================
 
 [tool.mypy]
 python_version = "3.9"
 show_error_codes = true
 pretty = true
-
-[[tool.bumpversion.files]]
-filename = "src/pr_prompt/__init__.py"
-search = "__version__ = \"{current_version}\""
-replace = "__version__ = \"{new_version}\""

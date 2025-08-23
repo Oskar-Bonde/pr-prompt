@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from git import Diff, DiffIndex
 
-from pr_prompt.git_client import GitClient
+from pr_prompt.utils import GitClient
 
 
 @pytest.fixture
@@ -18,10 +18,10 @@ def mock_git_client() -> MagicMock:
 def create_mock_git_client(
     target_branch: str = "main",
     feature_branch: str = "feature/test",
+    *,
     repo_name: str = "test-repo",
     files: Optional[list[str]] = None,
     commit_messages: Optional[list[str]] = None,
-    diff_content: Optional[str] = None,
 ) -> MagicMock:
     """
     Create a properly configured mock GitClient.

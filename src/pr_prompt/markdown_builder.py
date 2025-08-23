@@ -3,18 +3,17 @@ from typing import Optional
 
 from git import Diff, DiffIndex
 
-from pr_prompt.markdown_parser import get_markdown_content
-
-from .diff_parser import DiffFile
-from .file_filters import FileFilter
-from .file_tree import build_file_tree
-from .git_client import GitClient
+from .utils import (
+    DiffFile,
+    FileFilter,
+    GitClient,
+    build_file_tree,
+    get_markdown_content,
+)
 
 
 @dataclass
-class PromptSection:
-    """Represents a section of the prompt."""
-
+class MarkdownSection:
     title: str
     content: str = ""
     heading_level: int = 2
@@ -27,15 +26,17 @@ class PromptSection:
         return f"{heading} {self.title}"
 
 
-class PromptBuilder:
-    """Builds structured prompts for pull request review."""
+class MarkdownBuilder:
+    """Builds structured markdown prompts for pull request."""
 
     def __init__(self, git_client: GitClient) -> None:
         self.git_client = git_client
-        self.sections: list[PromptSection] = []
+        self.sections: list[MarkdownSection] = []
 
     def add_instructions(self, instructions: str) -> None:
-        self.sections.append(PromptSection(title="Instructions", content=instructions))
+        self.sections.append(
+            MarkdownSection(title="Instructions", content=instructions)
+        )
 
     def add_metadata(
         self,
@@ -65,7 +66,7 @@ class PromptBuilder:
             content_parts.append(f"**Commits:**\n{commits_text}")
 
         self.sections.append(
-            PromptSection(
+            MarkdownSection(
                 title="Pull Request Details",
                 content="\n\n".join(content_parts),
             )
@@ -82,14 +83,14 @@ class PromptBuilder:
         if not context_file_paths:
             return
 
-        self.sections.append(PromptSection(title="Context Files"))
+        self.sections.append(MarkdownSection(title="Context Files"))
         for file_path in context_file_paths:
             content = self.git_client.get_file_content(
                 self.git_client.feature_branch, file_path
             )
             content_md = get_markdown_content(file_path, content)
             self.sections.append(
-                PromptSection(
+                MarkdownSection(
                     title=f"File: `{file_path}`",
                     content=content_md,
                     heading_level=3,
@@ -106,7 +107,7 @@ class PromptBuilder:
         file_tree = build_file_tree(files) if files else "No files changed"
 
         self.sections.append(
-            PromptSection(
+            MarkdownSection(
                 title="Changed Files",
                 content=f"```\n{file_tree}\n```",
             )
@@ -114,13 +115,13 @@ class PromptBuilder:
 
     def add_file_diffs(self, file_diffs: dict[str, DiffFile]) -> None:
         """Add file diffs with individual headings for each file."""
-        self.sections.append(PromptSection(title="File diffs"))
+        self.sections.append(MarkdownSection(title="File diffs"))
 
         for file_path, diff_file in file_diffs.items():
             content = f"```diff\n{diff_file.content}\n```"
 
             self.sections.append(
-                PromptSection(
+                MarkdownSection(
                     title=f"{diff_file.change_type} `{file_path}`",
                     content=content,
                     heading_level=3,
