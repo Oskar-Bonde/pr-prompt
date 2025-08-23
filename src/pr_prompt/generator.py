@@ -35,7 +35,6 @@ class PrPromptGenerator:
 
     Attributes:
         blacklist_patterns: File patterns to exclude from the diff analysis.
-            Files with space are always excluded `"* *"`.
         context_patterns: Patterns to select context files to include in prompt.
             Useful for including documentation that provide context for the review.
         diff_context_lines: Number of context lines around changes in diffs.
@@ -49,11 +48,6 @@ class PrPromptGenerator:
 
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
-
-    def __post_init__(self):
-        """Exclude files with whitespace in their names."""
-        if "* *" not in self.blacklist_patterns:
-            self.blacklist_patterns.append("* *")
 
     def generate_review(
         self,

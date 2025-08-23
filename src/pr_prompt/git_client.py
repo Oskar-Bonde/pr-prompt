@@ -62,7 +62,3 @@ class GitClient:
             find_renames=50,
             function_context=True,
         )
-
-
-class GitError(Exception):
-    """Raised when a git command fails."""
