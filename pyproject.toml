@@ -12,6 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "bump-my-version",
     "mypy",
     "pylint",
     "pylint-pytest",
@@ -102,3 +103,8 @@ testpaths = ["tests"]
 python_version = "3.9"
 show_error_codes = true
 pretty = true
+
+[[tool.bumpversion.files]]
+filename = "src/pr_prompt/__init__.py"
+search = "__version__ = \"{current_version}\""
+replace = "__version__ = \"{new_version}\""
