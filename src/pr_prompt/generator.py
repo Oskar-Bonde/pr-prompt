@@ -17,13 +17,13 @@ class PrPromptGenerator:
 
     Example:
         ```python
-        generator = PrPrompt(
+        generator = PrPromptGenerator(
             blacklist_patterns=["*.lock"],
             context_patterns=[".github/copilot-instructions.md"],
             include_commit_messages=True,
         )
         prompt = generator.generate(
-            target_branch="origin/main",
+            target_branch="main",
             feature_branch="feature/auth-system",
             pr_title="Add new authentication system",
             pr_description="Implements OAuth2 with JWT tokens",
@@ -38,6 +38,9 @@ class PrPromptGenerator:
             Includes full file context by default.
         include_commit_messages: Whether to include commit messages in the prompt.
             Default: `True`.
+        repo_path: The path to either the worktree directory or the .git directory itself.
+            Default: Current working directory.
+        remote: Name of the git remote to use. Default: "origin".
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -45,6 +48,8 @@ class PrPromptGenerator:
 
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
+    repo_path: Optional[str] = None
+    remote: str = "origin"
 
     def generate_review(
         self,
@@ -65,7 +70,11 @@ Your task:
 
 Focus on actionable feedback that improves code quality and maintainability."""
         return self._generate(
-            instructions, target_branch, feature_branch, pr_title, pr_description
+            instructions,
+            target_branch,
+            feature_branch,
+            pr_title=pr_title,
+            pr_description=pr_description,
         )
 
     def generate_description(
@@ -86,7 +95,11 @@ Your task:
 
 Create a clear, comprehensive PR description that helps reviewers understand the changes."""
         return self._generate(
-            instructions, target_branch, feature_branch, pr_title, pr_description=None
+            instructions,
+            target_branch,
+            feature_branch,
+            pr_title=pr_title,
+            pr_description=None,
         )
 
     def generate_custom(
@@ -100,19 +113,26 @@ Create a clear, comprehensive PR description that helps reviewers understand the
     ) -> str:
         """Generate a pull request prompt with custom instructions."""
         return self._generate(
-            instructions, target_branch, feature_branch, pr_title, pr_description
+            instructions,
+            target_branch,
+            feature_branch,
+            pr_title=pr_title,
+            pr_description=pr_description,
         )
 
-    def _generate(  # pylint: disable=too-many-positional-arguments
+    def _generate(
         self,
         instructions: str,
         target_branch: str,
         feature_branch: Optional[str] = None,
+        *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
         """Generate a pull request prompt."""
-        git = GitClient(target_branch, feature_branch)
+        git = GitClient(
+            target_branch, feature_branch, repo_path=self.repo_path, remote=self.remote
+        )
 
         git.fetch_branch(target_branch)
 
