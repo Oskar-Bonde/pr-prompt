@@ -33,8 +33,8 @@ generator = PrPromptGenerator()
 
 # Generate a code review prompt
 review_prompt = generator.generate_review(
-    target_branch="origin/main",
-    feature_branch="feature/auth-system",
+    base_ref="origin/main",
+    head_ref="feature/auth-system",
     pr_title="Add OAuth2 authentication",
     pr_description="Implements secure user authentication with JWT tokens"
 )
@@ -53,7 +53,7 @@ generator = PrPromptGenerator()
 
 # Generate a prompt for reviewing changes against main branch
 prompt = generator.generate_review(
-    target_branch="origin/main",
+    base_ref="origin/main",
     pr_title="Fix user authentication bug",
     pr_description="Resolves issue where users couldn't log in with special characters"
 )
@@ -64,8 +64,8 @@ prompt = generator.generate_review(
 ```python
 # Generate a prompt to help write PR descriptions
 description_prompt = generator.generate_description(
-    target_branch="origin/main",
-    feature_branch="feature/user-dashboard",
+    base_ref="origin/main",
+    head_ref="feature/user-dashboard",
     pr_title="Add user dashboard"
 )
 ```
@@ -76,8 +76,8 @@ description_prompt = generator.generate_description(
 # Create custom prompts with specific instructions
 custom_prompt = generator.generate_custom(
     instructions="Focus on security vulnerabilities and performance issues.",
-    target_branch="origin/main",
-    feature_branch="feature/payment-processing"
+    base_ref="origin/main",
+    head_ref="feature/payment-processing"
 )
 ```
 
@@ -114,7 +114,7 @@ The main class for generating pull request prompts.
 
 #### Methods
 
-##### `generate_review(target_branch, feature_branch=None, *, pr_title=None, pr_description=None)`
+##### `generate_review(base_ref, head_ref=None, *, pr_title=None, pr_description=None)`
 
 Generates a prompt optimized for code review with instructions to:
 - Identify bugs, security issues, and performance problems
@@ -122,7 +122,7 @@ Generates a prompt optimized for code review with instructions to:
 - Assess code clarity and complexity
 - Provide specific, actionable feedback
 
-##### `generate_description(target_branch, feature_branch=None, pr_title=None)`
+##### `generate_description(base_ref, head_ref=None, pr_title=None)`
 
 Generates a prompt for creating comprehensive PR descriptions that:
 - Summarize what the PR accomplishes
@@ -130,7 +130,7 @@ Generates a prompt for creating comprehensive PR descriptions that:
 - Document impact and affected areas
 - Highlight breaking changes
 
-##### `generate_custom(instructions, target_branch, feature_branch=None, *, pr_title=None, pr_description=None)`
+##### `generate_custom(instructions, base_ref, head_ref=None, *, pr_title=None, pr_description=None)`
 
 Generates a prompt with custom instructions for specialized use cases.
 
@@ -151,12 +151,12 @@ The generated prompts include:
 ```python
 # Compare feature branch against develop instead of main
 prompt = generator.generate_review(
-    target_branch="origin/develop",
-    feature_branch="feature/new-api"
+    base_ref="origin/develop",
+    head_ref="feature/new-api"
 )
 
 # Use current branch as feature branch (default behavior)
-prompt = generator.generate_review(target_branch="origin/main")
+prompt = generator.generate_review(base_ref="origin/main")
 ```
 
 ### Including Documentation

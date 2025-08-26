@@ -100,8 +100,8 @@ class TestPrPrompt:
         # Configure the mock to return our mock instance
         files = ["main.py", "uv.lock"]
         mock_git = create_mock_git_client(
-            target_branch="origin/main",
-            feature_branch="feature/test",
+            base_ref="origin/main",
+            head_ref="feature/test",
             files=files,
             commit_messages=["Initial commit"],
         )
@@ -109,8 +109,8 @@ class TestPrPrompt:
 
         generator = PrPromptGenerator()
         prompt = generator.generate_review(
-            target_branch="origin/main",
-            feature_branch="feature/test",
+            base_ref="origin/main",
+            head_ref="feature/test",
             pr_title="Test PR",
         )
         assert "Test PR" in prompt

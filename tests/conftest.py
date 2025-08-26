@@ -16,8 +16,8 @@ def mock_git_client() -> MagicMock:
 
 
 def create_mock_git_client(
-    target_branch: str = "main",
-    feature_branch: str = "feature/test",
+    base_ref: str = "main",
+    head_ref: str = "feature/test",
     *,
     repo_name: str = "test-repo",
     files: Optional[list[str]] = None,
@@ -27,8 +27,8 @@ def create_mock_git_client(
     Create a properly configured mock GitClient.
 
     Args:
-        target_branch: Target branch name
-        feature_branch: Feature branch name
+        base_ref: Target branch name
+        head_ref: Feature branch name
         repo_name: Repository name
         files: List of files in the repository
         commit_messages: List of commit messages
@@ -43,8 +43,8 @@ def create_mock_git_client(
         commit_messages = ["Initial commit"]
 
     mock_git = MagicMock(spec=GitClient)
-    mock_git.target_branch = target_branch
-    mock_git.feature_branch = feature_branch
+    mock_git.base_ref = base_ref
+    mock_git.head_ref = head_ref
     mock_git.get_repo_name.return_value = repo_name
     mock_git.list_files.return_value = files
     mock_git.get_commit_messages.return_value = commit_messages

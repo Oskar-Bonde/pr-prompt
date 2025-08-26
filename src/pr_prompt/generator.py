@@ -12,8 +12,7 @@ class PrPromptGenerator:
     """
     Generator for pull request prompts.
 
-    This class creates formatted prompts for LLM review of pull requests by analyzing
-    git diffs, commit messages, and file changes between branches.
+    This class creates formatted prompts for pull requests using `git diff`.
 
     Example:
         ```python
@@ -23,8 +22,8 @@ class PrPromptGenerator:
             include_commit_messages=True,
         )
         prompt = generator.generate(
-            target_branch="main",
-            feature_branch="feature/auth-system",
+            base_ref="origin/main",
+            head_ref="auth-system",
             pr_title="Add new authentication system",
             pr_description="Implements OAuth2 with JWT tokens",
         )
@@ -40,7 +39,7 @@ class PrPromptGenerator:
             Default: `True`.
         repo_path: The path to either the worktree directory or the .git directory itself.
             Default: Current working directory.
-        remote: Name of the git remote to use. Default: "origin".
+        remote: Name of the git remote to use. Default: `"origin"`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -53,13 +52,21 @@ class PrPromptGenerator:
 
     def generate_review(
         self,
-        target_branch: str,
-        feature_branch: Optional[str] = None,
+        base_ref: str,
+        head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
-        """Generate a prompt for reviewing a pull request."""
+        """
+        Generate a prompt for reviewing a pull request.
+
+        Args:
+            base_ref: The base branch to compare against (e.g., "origin/main").
+            head_ref: The feature branch to compare (e.g., "auth-system").
+            pr_title: The title of the pull request.
+            pr_description: The description of the pull request.
+        """
         instructions = """You are an expert software engineer reviewing a pull request.
 
 Your task:
@@ -71,16 +78,16 @@ Your task:
 Focus on actionable feedback that improves code quality and maintainability."""
         return self._generate(
             instructions,
-            target_branch,
-            feature_branch,
+            base_ref,
+            head_ref,
             pr_title=pr_title,
             pr_description=pr_description,
         )
 
     def generate_description(
         self,
-        target_branch: str,
-        feature_branch: Optional[str] = None,
+        base_ref: str,
+        head_ref: Optional[str] = None,
         pr_title: Optional[str] = None,
     ) -> str:
         """Generate a prompt for creating PR descriptions."""
@@ -96,8 +103,8 @@ Your task:
 Create a clear, comprehensive PR description that helps reviewers understand the changes."""
         return self._generate(
             instructions,
-            target_branch,
-            feature_branch,
+            base_ref,
+            head_ref,
             pr_title=pr_title,
             pr_description=None,
         )
@@ -105,8 +112,8 @@ Create a clear, comprehensive PR description that helps reviewers understand the
     def generate_custom(
         self,
         instructions: str,
-        target_branch: str,
-        feature_branch: Optional[str] = None,
+        base_ref: str,
+        head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
@@ -114,8 +121,8 @@ Create a clear, comprehensive PR description that helps reviewers understand the
         """Generate a pull request prompt with custom instructions."""
         return self._generate(
             instructions,
-            target_branch,
-            feature_branch,
+            base_ref,
+            head_ref,
             pr_title=pr_title,
             pr_description=pr_description,
         )
@@ -123,18 +130,18 @@ Create a clear, comprehensive PR description that helps reviewers understand the
     def _generate(
         self,
         instructions: str,
-        target_branch: str,
-        feature_branch: Optional[str] = None,
+        base_ref: str,
+        head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
         """Generate a pull request prompt."""
         git = GitClient(
-            target_branch, feature_branch, repo_path=self.repo_path, remote=self.remote
+            base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
         )
 
-        git.fetch_branch(target_branch)
+        git.fetch_branch(base_ref)
 
         builder = MarkdownBuilder(git)
 

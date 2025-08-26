@@ -20,18 +20,18 @@ def main() -> None:
     help="Output file path (default: review.md)",
 )
 @click.option(
-    "--target-branch", "-t", help="Target branch to compare against", required=True
+    "--base-ref", "-b", help="Target branch to compare against", required=True
 )
-def review(output: str, target_branch: str) -> None:
+def review(output: str, base_ref: str) -> None:
     """Write a pull request review prompt to <output>."""
-    click.echo(f"Comparing to {target_branch}...")
+    click.echo(f"Comparing to {base_ref}...")
 
     config = load_config()
     generator = PrPromptGenerator(
         blacklist_patterns=config.blacklist_patterns,
         context_patterns=config.context_patterns,
     )
-    prompt = generator.generate_review(target_branch)
+    prompt = generator.generate_review(base_ref)
 
     output_path = Path(output)
     output_path.write_text(prompt, encoding="utf-8")
@@ -48,18 +48,18 @@ def review(output: str, target_branch: str) -> None:
     help="Output file path (default: description.md)",
 )
 @click.option(
-    "--target-branch", "-t", help="Target branch to compare against", required=True
+    "--base-ref", "-b", help="Target branch to compare against", required=True
 )
-def description(output: str, target_branch: str) -> None:
+def description(output: str, base_ref: str) -> None:
     """Write a pull request description prompt to <output>."""
-    click.echo(f"Comparing to {target_branch}...")
+    click.echo(f"Comparing to {base_ref}...")
 
     config = load_config()
     generator = PrPromptGenerator(
         blacklist_patterns=config.blacklist_patterns,
         context_patterns=config.context_patterns,
     )
-    prompt = generator.generate_description(target_branch)
+    prompt = generator.generate_description(base_ref)
 
     output_path = Path(output)
     output_path.write_text(prompt, encoding="utf-8")

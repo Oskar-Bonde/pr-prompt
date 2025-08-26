@@ -7,8 +7,8 @@ from git import Blob, Diff, DiffIndex, Repo
 class GitClient:
     def __init__(
         self,
-        target_branch: str,
-        feature_branch: Optional[str] = None,
+        base_ref: str,
+        head_ref: Optional[str] = None,
         *,
         repo_path: Optional[str] = None,
         remote: str = "origin",
@@ -17,10 +17,10 @@ class GitClient:
         self.repo = Repo(repo_path)
         self.remote = self.repo.remote(remote)
 
-        self.target_branch = target_branch
-        self.feature_branch = feature_branch or self.repo.active_branch.name
-        self.target_commit = self.repo.commit(target_branch)
-        self.feature_commit = self.repo.commit(feature_branch)
+        self.base_ref = base_ref
+        self.head_ref = head_ref or self.repo.active_branch.name
+        self.target_commit = self.repo.commit(base_ref)
+        self.feature_commit = self.repo.commit(head_ref)
 
     def fetch_branch(self, branch: str) -> None:
         """Fetch a specific branch from a remote."""

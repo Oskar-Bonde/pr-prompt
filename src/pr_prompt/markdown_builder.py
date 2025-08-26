@@ -51,7 +51,7 @@ class MarkdownBuilder:
         content_parts.append(f"**Repository:** {self.git_client.get_repo_name()}")
 
         content_parts.append(
-            f"**Branch:** `{self.git_client.feature_branch}` -> `{self.git_client.target_branch}`"
+            f"**Branch:** `{self.git_client.head_ref}` -> `{self.git_client.base_ref}`"
         )
 
         if pr_title:
@@ -77,7 +77,7 @@ class MarkdownBuilder:
         if not context_patterns:
             return
 
-        all_files = self.git_client.list_files(self.git_client.feature_branch)
+        all_files = self.git_client.list_files(self.git_client.head_ref)
         context_file_paths = FileFilter.match(all_files, context_patterns)
 
         if not context_file_paths:
@@ -86,7 +86,7 @@ class MarkdownBuilder:
         self.sections.append(MarkdownSection(title="Context Files"))
         for file_path in context_file_paths:
             content = self.git_client.get_file_content(
-                self.git_client.feature_branch, file_path
+                self.git_client.head_ref, file_path
             )
             content_md = get_markdown_content(file_path, content)
             self.sections.append(
