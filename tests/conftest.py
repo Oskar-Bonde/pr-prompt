@@ -23,20 +23,6 @@ def create_mock_git_client(
     files: Optional[list[str]] = None,
     commit_messages: Optional[list[str]] = None,
 ) -> MagicMock:
-    """
-    Create a properly configured mock GitClient.
-
-    Args:
-        base_ref: Target branch name
-        head_ref: Feature branch name
-        repo_name: Repository name
-        files: List of files in the repository
-        commit_messages: List of commit messages
-        diff_content: Custom diff content for the mock diff
-
-    Returns:
-        Configured MagicMock instance
-    """
     if files is None:
         files = ["main.py"]
     if commit_messages is None:

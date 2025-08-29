@@ -18,12 +18,12 @@ class PrPromptGenerator:
         ```python
         generator = PrPromptGenerator(
             blacklist_patterns=["*.lock"],
-            context_patterns=[".github/copilot-instructions.md"],
+            context_patterns=["AGENTS.md"],
             include_commit_messages=True,
         )
         prompt = generator.generate(
             base_ref="origin/main",
-            head_ref="auth-system",
+            head_ref=None,
             pr_title="Add new authentication system",
             pr_description="Implements OAuth2 with JWT tokens",
         )
@@ -31,19 +31,22 @@ class PrPromptGenerator:
 
     Attributes:
         blacklist_patterns: File patterns to exclude from the diff analysis.
+            Default: `["*.lock"]`.
         context_patterns: Patterns to select context files to include in prompt.
             Useful for including documentation that provide context for the review.
+            Default: `["AGENTS.md"]`.
         diff_context_lines: Number of context lines around changes in diffs.
-            Includes full file context by default.
+            Default: `999999`.
         include_commit_messages: Whether to include commit messages in the prompt.
             Default: `True`.
         repo_path: The path to either the worktree directory or the .git directory itself.
             Default: Current working directory.
-        remote: Name of the git remote to use. Default: `"origin"`.
+        remote: Name of the git remote to use.
+            Default: `"origin"`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
-    context_patterns: list[str] = field(default_factory=lambda: ["LLM.md"])
+    context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
 
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
@@ -62,8 +65,9 @@ class PrPromptGenerator:
         Generate a prompt for reviewing a pull request.
 
         Args:
-            base_ref: The base branch to compare against (e.g., "origin/main").
-            head_ref: The feature branch to compare (e.g., "auth-system").
+            base_ref: The base branch/commit to compare against (e.g., "origin/main").
+            head_ref: The branch/commit with changes.
+                Default: current branch.
             pr_title: The title of the pull request.
             pr_description: The description of the pull request.
         """
