@@ -7,12 +7,9 @@ license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "click>=8.0.0",
     "gitpython>=3.1.45",
+    "typer>=0.19.1",
 ]
-
-[project.scripts]
-pr-prompt = "pr_prompt.cli:main"
 
 [dependency-groups]
 dev = [
@@ -26,11 +23,16 @@ dev = [
     "ruff",
 ]
 
+[project.scripts]
+pr-prompt = "pr_prompt.cli:main"
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 # ===================== bumpversion =====================
+[tool.bumpversion]
+current_version = "0.1.0"
 
 [[tool.bumpversion.files]]
 filename = "src/pr_prompt/__init__.py"
