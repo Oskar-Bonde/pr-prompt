@@ -10,22 +10,17 @@ def load_toml_config() -> dict:
         return {}
 
     toml_config = load_config_toml(toml_path)
-    return get_pr_prompt_config(toml_config, toml_path.name)
+    return get_pr_prompt_config(toml_config)
 
 
 def find_toml_file_path() -> Path:
     config_path = Path.cwd()
     while config_path != config_path.parent:
-        # Check for pr_prompt.toml first
-        pr_prompt_path = config_path / "pr_prompt.toml"
-        if pr_prompt_path.exists():
-            return pr_prompt_path
-
-        # Fall back to pyproject.toml
-        pyproject_path = config_path / "pyproject.toml"
-        if pyproject_path.exists():
-            return pyproject_path
-
+        # Check for pr_prompt.toml first (higher priority)
+        for filename in ["pr_prompt.toml", "pyproject.toml"]:
+            candidate = config_path / filename
+            if candidate.exists():
+                return candidate
         config_path = config_path.parent
     return Path("pr_prompt.toml")
 
