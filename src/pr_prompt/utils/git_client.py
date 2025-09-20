@@ -7,7 +7,7 @@ from git import Blob, Diff, DiffIndex, Repo
 class GitClient:
     def __init__(
         self,
-        base_ref: str,
+        base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
         repo_path: Optional[str] = None,
@@ -17,10 +17,28 @@ class GitClient:
         self.repo = Repo(repo_path)
         self.remote = self.repo.remote(remote)
 
-        self.base_ref = base_ref
+        self.base_ref = base_ref or self.get_default_branch()
         self.head_ref = head_ref or self.repo.active_branch.name
-        self.target_commit = self.repo.commit(base_ref)
-        self.feature_commit = self.repo.commit(head_ref)
+        self.target_commit = self.repo.commit(self.base_ref)
+        self.feature_commit = self.repo.commit(self.head_ref)
+
+    def get_default_branch(self) -> str:
+        """Get the default branch name from the remote."""
+        try:
+            remote_head = self.remote.refs.HEAD
+            return f"{self.remote.name}/{remote_head.reference.remote_head}"  # noqa: TRY300
+        except (AttributeError, IndexError) as err:
+            # Fallback to common default branch names if symbolic ref is not available
+            for default_name in ["main", "master"]:
+                if f"{self.remote.name}/{default_name}" in [
+                    ref.name for ref in self.remote.refs
+                ]:
+                    return f"{self.remote.name}/{default_name}"
+            msg = "Could not determine default branch. Please specify base_ref."
+            raise InferBaseBranchError(msg) from err
+
+    def fetch_base_branch(self) -> None:
+        self.fetch_branch(self.base_ref)
 
     def fetch_branch(self, branch: str) -> None:
         """Fetch a specific branch from a remote."""
@@ -62,3 +80,7 @@ class GitClient:
             find_renames=50,
             function_context=True,
         )
+
+
+class InferBaseBranchError(Exception):
+    """Raised when unable to infer the default branch from the remote."""

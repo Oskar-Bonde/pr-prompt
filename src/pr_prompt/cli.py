@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import click
 
 from .generator import PrPromptGenerator
-from .utils.config import load_config
 
 
 @click.group()
@@ -20,17 +21,13 @@ def main() -> None:
     help="Output file path (default: review.md)",
 )
 @click.option(
-    "--base-ref", "-b", help="The branch/commit to compare against", required=True
+    "--base-ref", "-b", help="The branch/commit to compare against", required=False
 )
-def review(output: str, base_ref: str) -> None:
+def review(output: str, base_ref: str | None) -> None:
     """Write a pull request review prompt to <output>."""
-    click.echo(f"Comparing to {base_ref}...")
+    click.echo("Comparing to base ref...")
 
-    config = load_config()
-    generator = PrPromptGenerator(
-        blacklist_patterns=config.blacklist_patterns,
-        context_patterns=config.context_patterns,
-    )
+    generator = PrPromptGenerator.from_toml()
     prompt = generator.generate_review(base_ref)
 
     output_path = Path(output)
@@ -48,17 +45,13 @@ def review(output: str, base_ref: str) -> None:
     help="Output file path (default: description.md)",
 )
 @click.option(
-    "--base-ref", "-b", help="The branch/commit to compare against", required=True
+    "--base-ref", "-b", help="The branch/commit to compare against", required=False
 )
-def description(output: str, base_ref: str) -> None:
+def description(output: str, base_ref: str | None) -> None:
     """Write a pull request description prompt to <output>."""
     click.echo(f"Comparing to {base_ref}...")
 
-    config = load_config()
-    generator = PrPromptGenerator(
-        blacklist_patterns=config.blacklist_patterns,
-        context_patterns=config.context_patterns,
-    )
+    generator = PrPromptGenerator.from_toml()
     prompt = generator.generate_description(base_ref)
 
     output_path = Path(output)
