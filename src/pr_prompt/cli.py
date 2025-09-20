@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import click
@@ -19,11 +21,11 @@ def main() -> None:
     help="Output file path (default: review.md)",
 )
 @click.option(
-    "--base-ref", "-b", help="The branch/commit to compare against", required=True
+    "--base-ref", "-b", help="The branch/commit to compare against", required=False
 )
-def review(output: str, base_ref: str) -> None:
+def review(output: str, base_ref: str | None) -> None:
     """Write a pull request review prompt to <output>."""
-    click.echo(f"Comparing to {base_ref}...")
+    click.echo("Comparing to base ref...")
 
     generator = PrPromptGenerator.from_toml()
     prompt = generator.generate_review(base_ref)
@@ -43,9 +45,9 @@ def review(output: str, base_ref: str) -> None:
     help="Output file path (default: description.md)",
 )
 @click.option(
-    "--base-ref", "-b", help="The branch/commit to compare against", required=True
+    "--base-ref", "-b", help="The branch/commit to compare against", required=False
 )
-def description(output: str, base_ref: str) -> None:
+def description(output: str, base_ref: str | None) -> None:
     """Write a pull request description prompt to <output>."""
     click.echo(f"Comparing to {base_ref}...")
 
