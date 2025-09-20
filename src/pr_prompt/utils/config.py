@@ -1,46 +1,19 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import tomllib
 from tomllib import TOMLDecodeError
 
 
-@dataclass
-class PrPromptConfig:
-    """Configuration for pr-prompt tool."""
+def load_toml_config() -> dict:
+    pyproject_toml_path = find_pyproject_toml_path()
+    if not pyproject_toml_path.exists():
+        return {}
 
-    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
-    context_patterns: list[str] = field(default_factory=lambda: ["LLM.md"])
-
-
-def load_config() -> PrPromptConfig:
-    """Load configuration from pyproject.toml."""
-    pyproject_path = find_pyproject_path()
-
-    default_config = PrPromptConfig()
-
-    if not pyproject_path.exists():
-        return PrPromptConfig()
-
-    try:
-        with pyproject_path.open("rb") as f:
-            data = tomllib.load(f)
-
-        pr_prompt_config = data.get("tool", {}).get("pr-prompt", {})
-
-        return PrPromptConfig(
-            blacklist_patterns=pr_prompt_config.get(
-                "blacklist_patterns", default_config.blacklist_patterns
-            ),
-            context_patterns=pr_prompt_config.get(
-                "context_patterns", default_config.context_patterns
-            ),
-        )
-    except TOMLDecodeError:
-        return PrPromptConfig()
+    pyproject_toml = load_pyproject_toml(pyproject_toml_path)
+    return get_pr_prompt_config(pyproject_toml)
 
 
-def find_pyproject_path() -> Path:
+def find_pyproject_toml_path() -> Path:
     config_path = Path.cwd()
     while config_path != config_path.parent:
         pyproject_path = config_path / "pyproject.toml"
@@ -51,3 +24,16 @@ def find_pyproject_path() -> Path:
     else:
         config_path = Path("pyproject.toml")
     return config_path
+
+
+def load_pyproject_toml(pyproject_path: Path) -> dict[str, dict]:
+    try:
+        with pyproject_path.open("rb") as f:
+            return tomllib.load(f)
+
+    except TOMLDecodeError:
+        return {}
+
+
+def get_pr_prompt_config(pyproject_toml: dict) -> dict:
+    return pyproject_toml.get("tool", {}).get("pr-prompt", {})

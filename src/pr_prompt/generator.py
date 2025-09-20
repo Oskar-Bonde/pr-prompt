@@ -6,6 +6,7 @@ from typing import Optional
 from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
 from .utils import GitClient, get_diff_files
+from .utils.config import load_toml_config
 
 
 @dataclass
@@ -53,6 +54,29 @@ class PrPromptGenerator:
     include_commit_messages: bool = True
     repo_path: Optional[str] = None
     remote: str = "origin"
+
+    @classmethod
+    def from_toml(
+        cls, **overrides: list[str] | int | bool | str
+    ) -> "PrPromptGenerator":
+        """
+        Create a PrPromptGenerator instance from pyproject.toml configuration.
+
+        Args:
+            **overrides: Keyword arguments to override TOML config values.
+                Supported keys: blacklist_patterns, context_patterns, diff_context_lines,
+                include_commit_messages, repo_path, remote.
+        """
+        toml_config = load_toml_config()
+
+        # Merge TOML config with overrides (overrides take precedence)
+        config = {**toml_config, **overrides}
+
+        # Filter to only include valid dataclass fields
+        valid_fields = {field.name for field in cls.__dataclass_fields__.values()}
+        filtered_config = {k: v for k, v in config.items() if k in valid_fields}
+
+        return cls(**filtered_config)
 
     def generate_review(
         self,
