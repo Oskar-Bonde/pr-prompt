@@ -1,5 +1,7 @@
 """Generator for pull request prompts."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -56,9 +58,7 @@ class PrPromptGenerator:
     remote: str = "origin"
 
     @classmethod
-    def from_toml(
-        cls, **overrides: list[str] | int | bool | str
-    ) -> "PrPromptGenerator":
+    def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
         """
         Create a PrPromptGenerator instance from pyproject.toml configuration.
 

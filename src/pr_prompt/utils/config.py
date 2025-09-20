@@ -10,7 +10,9 @@ def load_toml_config() -> dict:
         return {}
 
     toml_config = load_config_toml(toml_path)
-    return get_pr_prompt_config(toml_config)
+    pr_prompt_config = get_pr_prompt_config(toml_config)
+    validate_toml_config(pr_prompt_config)
+    return pr_prompt_config
 
 
 def find_toml_file_path() -> Path:
@@ -36,3 +38,30 @@ def load_config_toml(config_path: Path) -> dict[str, dict]:
 
 def get_pr_prompt_config(config_toml: dict) -> dict:
     return config_toml.get("tool", {}).get("pr-prompt", {})
+
+
+def validate_toml_config(config: dict) -> None:
+    """Validate TOML configuration values and raise error if invalid."""
+    validators = {
+        "blacklist_patterns": lambda x: isinstance(x, list)
+        and all(isinstance(p, str) for p in x),
+        "context_patterns": lambda x: isinstance(x, list)
+        and all(isinstance(p, str) for p in x),
+        "diff_context_lines": lambda x: isinstance(x, int) and x >= 0,
+        "include_commit_messages": lambda x: isinstance(x, bool),
+        "repo_path": lambda x: isinstance(x, str),
+        "remote": lambda x: isinstance(x, str),
+    }
+
+    for field, value in config.items():
+        if field not in validators:
+            msg = f"Unknown config field '{field}' in [tool.pr-prompt]"
+            raise InvalidPrPromptTomlError(msg)
+
+        if not validators[field](value):
+            msg = f"Invalid config for '{field}': {value}"
+            raise InvalidPrPromptTomlError(msg)
+
+
+class InvalidPrPromptTomlError(Exception):
+    """Raised when configuration is invalid."""
