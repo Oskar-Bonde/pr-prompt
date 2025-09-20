@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
 from .utils import GitClient, get_diff_files
 
@@ -21,7 +22,7 @@ class PrPromptGenerator:
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
         )
-        prompt = generator.generate(
+        prompt = generator.generate_review(
             base_ref="origin/main",
             head_ref=None,
             pr_title="Add new authentication system",
@@ -66,22 +67,12 @@ class PrPromptGenerator:
 
         Args:
             base_ref: The base branch/commit to compare against (e.g., "origin/main").
-            head_ref: The branch/commit with changes.
-                Default: current branch.
+            head_ref: The branch/commit with changes. Default: current branch.
             pr_title: The title of the pull request.
             pr_description: The description of the pull request.
         """
-        instructions = """You are an expert software engineer reviewing a pull request.
-
-Your task:
-- Identify Issues: Find potential bugs, security vulnerabilities, and performance problems
-- Suggest Improvements: Recommend refactorings and best practices
-- Assess Clarity: Point out unclear or overly complex code
-- Be Specific: Reference line numbers and provide concrete examples
-
-Focus on actionable feedback that improves code quality and maintainability."""
         return self._generate(
-            instructions,
+            REVIEW_INSTRUCTIONS,
             base_ref,
             head_ref,
             pr_title=pr_title,
@@ -92,21 +83,20 @@ Focus on actionable feedback that improves code quality and maintainability."""
         self,
         base_ref: str,
         head_ref: Optional[str] = None,
+        *,
         pr_title: Optional[str] = None,
     ) -> str:
-        """Generate a prompt for creating PR descriptions."""
-        instructions = """You are an expert software engineer writing a pull request description.
+        """
+        Generate a prompt for creating PR descriptions.
 
-Your task:
-- Summarize Changes: Describe what this PR accomplishes
-- Explain Context: Why these changes were needed
-- Document Impact: What areas of the codebase are affected
-- Note Breaking Changes: Highlight any breaking changes or migration steps
-- Be Clear: Write for other developers who will review and maintain this code
+        Args:
+            base_ref: The base branch/commit to compare against (e.g., "origin/main").
+            head_ref: The branch/commit with changes. Default: current branch.
+            pr_title: The title of the pull request.
 
-Create a clear, comprehensive PR description that helps reviewers understand the changes."""
+        """
         return self._generate(
-            instructions,
+            DESCRIPTION_INSTRUCTIONS,
             base_ref,
             head_ref,
             pr_title=pr_title,
@@ -115,14 +105,24 @@ Create a clear, comprehensive PR description that helps reviewers understand the
 
     def generate_custom(
         self,
-        instructions: str,
         base_ref: str,
         head_ref: Optional[str] = None,
         *,
+        instructions: str,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
-        """Generate a pull request prompt with custom instructions."""
+        """
+        Generate a pull request prompt with custom instructions.
+
+        Args:
+            base_ref: The base branch/commit to compare against.
+            head_ref: The branch/commit with changes. Default: current branch.
+            instructions: Custom instructions for the LLM.
+            pr_title: The title of the pull request.
+            pr_description: The description of the pull request.
+
+        """
         return self._generate(
             instructions,
             base_ref,
