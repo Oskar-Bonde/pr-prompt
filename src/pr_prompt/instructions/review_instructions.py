@@ -9,21 +9,10 @@ Analyze the code changes with focus on:
 - Identify logic errors, edge cases, and potential runtime failures
 - Check for off-by-one errors, null/undefined handling, and type mismatches
 - Verify error handling and exception management
-- Ensure the changes accomplish what the PR description claims
 
 ### 2. Security & Safety
-- Look for injection vulnerabilities (SQL, XSS, command injection)
-- Check for exposed sensitive data or credentials
-- Verify authentication and authorization logic
-- Identify potential denial-of-service vectors
-- Review input validation and sanitization
-
+`
 ### 3. Performance & Scalability
-- Identify O(n²) or worse algorithmic complexity
-- Check for unnecessary database queries (N+1 problems)
-- Look for memory leaks or excessive memory usage
-- Review caching strategies and async/await usage
-- Consider impact on API response times
 
 ### 4. Code Quality & Maintainability
 - Assess code clarity and readability
@@ -35,8 +24,6 @@ Analyze the code changes with focus on:
 ### 5. Architecture & Design
 - Evaluate if changes follow existing patterns
 - Check for proper separation of concerns
-- Review API design and backwards compatibility
-- Assess impact on system dependencies
 
 ## Review Format
 
