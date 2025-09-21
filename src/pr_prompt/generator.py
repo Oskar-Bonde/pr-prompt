@@ -36,7 +36,7 @@ class PrPromptGenerator:
     Attributes:
         blacklist_patterns: File patterns to exclude from the diff analysis.
             Default: `["*.lock"]`.
-        context_patterns: Patterns to select context files to include in prompt.
+        context_patterns: File patterns to select files to include in prompt.
             Useful for including documentation that provide context for the review.
             Default: `["AGENTS.md"]`.
         diff_context_lines: Number of context lines around changes in diffs.
