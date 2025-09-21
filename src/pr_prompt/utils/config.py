@@ -1,9 +1,12 @@
+import sys
 from pathlib import Path
 
-import tomllib
-from tomllib import TOMLDecodeError
-
 from .errors import InvalidConfigError
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[import-not-found]
 
 
 def load_toml_config() -> dict:
@@ -34,7 +37,7 @@ def load_config_toml(config_path: Path) -> dict[str, dict]:
         with config_path.open("rb") as f:
             return tomllib.load(f)
 
-    except TOMLDecodeError:
+    except tomllib.TOMLDecodeError:
         return {}
 
 

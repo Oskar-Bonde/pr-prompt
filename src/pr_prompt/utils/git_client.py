@@ -26,7 +26,7 @@ class GitClient:
         """Get the default branch name from the remote."""
         try:
             remote_head = self.remote.refs.HEAD
-            return f"{self.remote.name}/{remote_head.reference.remote_head}"  # noqa: TRY300
+            return f"{self.remote.name}/{remote_head.reference.remote_head}"  # type: ignore[attr-defined] # noqa: TRY300
         except (AttributeError, IndexError) as err:
             # Fallback to common default branch names if symbolic ref is not available
             for default_name in ["main", "master"]:
