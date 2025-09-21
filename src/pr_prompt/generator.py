@@ -51,6 +51,8 @@ class PrPromptGenerator:
             Default: Infer from remote (e.g., "origin/main" or "origin/master").
         custom_instructions: Default custom instructions to use in generate_custom when none provided.
             Default: `None`.
+        fetch_base: Whether to fetch the base branch before generating diff.
+            Default: `True`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -62,6 +64,7 @@ class PrPromptGenerator:
     remote: str = "origin"
     default_base_branch: Optional[str] = None
     custom_instructions: Optional[str] = None
+    fetch_base: bool = True
 
     @classmethod
     def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
@@ -179,7 +182,8 @@ class PrPromptGenerator:
             base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
         )
 
-        git.fetch_base_branch()
+        if self.fetch_base:
+            git.fetch_base_branch()
 
         builder = MarkdownBuilder(git)
 
