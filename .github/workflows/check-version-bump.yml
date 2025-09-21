@@ -1,0 +1,22 @@
+name: Check version bump
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: git fetch origin main
+      - name: Check version bump
+        run: |
+          OLD_VERSION=$(git show origin/main:pyproject.toml | grep '^version =' | awk -F'"' '{print $2}')
+          NEW_VERSION=$(grep '^version =' pyproject.toml | awk -F'"' '{print $2}')
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo "❌ Version not bumped!"
+            exit 1
+          else
+            echo "✅ Version bumped from $OLD_VERSION to $NEW_VERSION"
+          fi

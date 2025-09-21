@@ -1,18 +1,16 @@
 [project]
 name = "pr-prompt"
-version = "0.1.0"
+version = "0.3.0"
 description = "A tool to generate pull request prompts using git cli commands."
 authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "click>=8.0.0",
     "gitpython>=3.1.45",
+    "typer>=0.19.1",
+    'tomli >= 1.1.0 ; python_version < "3.11"',
 ]
-
-[project.scripts]
-pr-prompt = "pr_prompt.cli:main"
 
 [dependency-groups]
 dev = [
@@ -26,11 +24,16 @@ dev = [
     "ruff",
 ]
 
+[project.scripts]
+pr-prompt = "pr_prompt.cli:main"
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 # ===================== bumpversion =====================
+[tool.bumpversion]
+current_version = "0.3.0"
 
 [[tool.bumpversion.files]]
 filename = "src/pr_prompt/__init__.py"
@@ -114,3 +117,10 @@ ignored-argument-names = "^self$|^cls$|^scope$|^construct_id$|_.*"
 python_version = "3.9"
 show_error_codes = true
 pretty = true
+disallow_untyped_defs = true
+
+# ===================== pr-prompt =====================
+[tool.pr-prompt]
+blacklist_patterns = ["pyproject.toml"]
+default_base_branch = "main"
+fetch_base = false
