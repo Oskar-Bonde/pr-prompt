@@ -44,7 +44,7 @@ def generate(
         typer.Option(
             "--base-ref",
             "-b",
-            help="The branch/commit to compare against. Infer from default branch if not provided",
+            help="The branch/commit to compare against (e.g., 'main'). Infer from default branch if not provided",
         ),
     ] = None,
     stdout: Annotated[  # noqa: FBT002

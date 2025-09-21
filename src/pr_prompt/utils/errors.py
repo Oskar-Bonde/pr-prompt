@@ -8,6 +8,8 @@ class PrPromptError(Exception):
 
 
 class MissingCustomInstructionsError(PrPromptError):
+    """Raised when custom instructions are required but not provided."""
+
     def __init__(self, message: str | None = None) -> None:
         if message is None:
             message = (

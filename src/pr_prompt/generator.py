@@ -25,7 +25,7 @@ class PrPromptGenerator:
             blacklist_patterns=["*.lock"],
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
-            default_base_branch="origin/main",
+            default_base_branch="main",
         )
         prompt = generator.generate_review(
             pr_title="Add new authentication system",
@@ -48,7 +48,7 @@ class PrPromptGenerator:
         remote: Name of the git remote to use.
             Default: `"origin"`.
         default_base_branch: The default base branch to compare against when base_ref is not provided.
-            Default: Infer from remote (e.g., "origin/main" or "origin/master").
+            Default: Infer from remote (e.g., "main" or "master").
         custom_instructions: Default custom instructions to use in generate_custom when none provided.
             Default: `None`.
         fetch_base: Whether to fetch the base branch before generating diff.
