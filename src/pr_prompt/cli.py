@@ -6,6 +6,7 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.markdown import Markdown
 
 from . import __version__
 from .generator import PrPromptGenerator
@@ -77,14 +78,15 @@ def generate(
     ] = False,
 ) -> None:
     """Generate a pull request prompt."""
-    console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
+    if not stdout:
+        console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
     overrides = get_overrides(blacklist, context)
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
 
     if stdout:
-        console.print(prompt)
+        console.print(Markdown(prompt))
     else:
         output_path = Path(f"{prompt_type.value}.md")
         output_path.write_text(prompt, encoding="utf-8")
