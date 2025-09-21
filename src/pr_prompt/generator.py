@@ -9,6 +9,7 @@ from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
 from .utils import GitClient, get_diff_files
 from .utils.config import load_toml_config
+from .utils.errors import MissingCustomInstructionsError
 
 
 @dataclass
@@ -24,7 +25,7 @@ class PrPromptGenerator:
             blacklist_patterns=["*.lock"],
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
-            default_base_branch="origin/main",
+            default_base_branch="main",
         )
         prompt = generator.generate_review(
             pr_title="Add new authentication system",
@@ -35,7 +36,7 @@ class PrPromptGenerator:
     Attributes:
         blacklist_patterns: File patterns to exclude from the diff analysis.
             Default: `["*.lock"]`.
-        context_patterns: Patterns to select context files to include in prompt.
+        context_patterns: File patterns to select files to include in prompt.
             Useful for including documentation that provide context for the review.
             Default: `["AGENTS.md"]`.
         diff_context_lines: Number of context lines around changes in diffs.
@@ -48,6 +49,10 @@ class PrPromptGenerator:
             Default: `"origin"`.
         default_base_branch: The default base branch to compare against when base_ref is not provided.
             Default: Infer from remote (e.g., "main" or "master").
+        custom_instructions: Default custom instructions to use in generate_custom when none provided.
+            Default: `None`.
+        fetch_base: Whether to fetch the base branch before generating diff.
+            Default: `True`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -58,6 +63,8 @@ class PrPromptGenerator:
     repo_path: Optional[str] = None
     remote: str = "origin"
     default_base_branch: Optional[str] = None
+    custom_instructions: Optional[str] = None
+    fetch_base: bool = True
 
     @classmethod
     def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
@@ -134,7 +141,7 @@ class PrPromptGenerator:
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
-        instructions: str,
+        instructions: Optional[str] = None,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
@@ -144,13 +151,17 @@ class PrPromptGenerator:
         Args:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
-            instructions: Custom instructions for the LLM.
+            instructions: Custom instructions for the LLM. If None, uses custom_instructions.
             pr_title: The title of the pull request.
             pr_description: The description of the pull request.
 
         """
+        final_instructions = instructions or self.custom_instructions
+        if final_instructions is None:
+            raise MissingCustomInstructionsError
+
         return self._generate(
-            instructions,
+            final_instructions,
             base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
@@ -171,7 +182,8 @@ class PrPromptGenerator:
             base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
         )
 
-        git.fetch_base_branch()
+        if self.fetch_base:
+            git.fetch_base_branch()
 
         builder = MarkdownBuilder(git)
 

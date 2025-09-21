@@ -17,23 +17,30 @@ class GitClient:
         self.repo = Repo(repo_path)
         self.remote = self.repo.remote(remote)
 
-        self.base_ref = base_ref or self.get_default_branch()
-        self.head_ref = head_ref or self.repo.active_branch.name
-        self.target_commit = self.repo.commit(self.base_ref)
-        self.feature_commit = self.repo.commit(self.head_ref)
+        self.base_ref = self._strip_remote(base_ref) or self.get_default_branch()
+        self.head_ref = self._strip_remote(head_ref) or self.repo.active_branch.name
+
+        self.target_commit = self.repo.commit(f"{self.remote.name}/{self.base_ref}")
+        self.feature_commit = self.repo.commit(f"{self.remote.name}/{self.head_ref}")
+
+    def _strip_remote(self, ref: Optional[str]) -> Optional[str]:
+        """Strip remote name from ref if present."""
+        if not ref:
+            return None
+        return ref.removeprefix(f"{self.remote.name}/")
 
     def get_default_branch(self) -> str:
         """Get the default branch name from the remote."""
         try:
             remote_head = self.remote.refs.HEAD
-            return f"{self.remote.name}/{remote_head.reference.remote_head}"  # noqa: TRY300
+            return remote_head.reference.remote_head  # type: ignore[attr-defined]  # noqa: TRY300
         except (AttributeError, IndexError) as err:
-            # Fallback to common default branch names if symbolic ref is not available
+            # Fallback to common default branch names
             for default_name in ["main", "master"]:
                 if f"{self.remote.name}/{default_name}" in [
                     ref.name for ref in self.remote.refs
                 ]:
-                    return f"{self.remote.name}/{default_name}"
+                    return default_name
             msg = "Could not determine default branch. Please specify base_ref."
             raise InferBaseBranchError(msg) from err
 
@@ -42,9 +49,8 @@ class GitClient:
 
     def fetch_branch(self, branch: str) -> None:
         """Fetch a specific branch from a remote."""
-        branch_ref = branch.removeprefix(f"{self.remote.name}/")
         if branch:
-            self.remote.fetch(branch_ref)
+            self.remote.fetch(branch)
 
     def get_commit_messages(self) -> list[str]:
         """Get list of commit messages between two refs."""

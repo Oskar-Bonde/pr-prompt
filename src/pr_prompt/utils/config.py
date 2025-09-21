@@ -1,7 +1,12 @@
+import sys
 from pathlib import Path
 
-import tomllib
-from tomllib import TOMLDecodeError
+from .errors import InvalidConfigError
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[import-not-found]
 
 
 def load_toml_config() -> dict:
@@ -32,7 +37,7 @@ def load_config_toml(config_path: Path) -> dict[str, dict]:
         with config_path.open("rb") as f:
             return tomllib.load(f)
 
-    except TOMLDecodeError:
+    except tomllib.TOMLDecodeError:
         return {}
 
 
@@ -51,17 +56,16 @@ def validate_toml_config(config: dict) -> None:
         "include_commit_messages": lambda x: isinstance(x, bool),
         "repo_path": lambda x: isinstance(x, str),
         "remote": lambda x: isinstance(x, str),
+        "custom_instructions": lambda x: isinstance(x, str),
+        "default_base_branch": lambda x: isinstance(x, str),
+        "fetch_base": lambda x: isinstance(x, bool),
     }
 
     for field, value in config.items():
         if field not in validators:
             msg = f"Unknown config field '{field}' in [tool.pr-prompt]"
-            raise InvalidPrPromptTomlError(msg)
+            raise InvalidConfigError(msg)
 
         if not validators[field](value):
             msg = f"Invalid config for '{field}': {value}"
-            raise InvalidPrPromptTomlError(msg)
-
-
-class InvalidPrPromptTomlError(Exception):
-    """Raised when configuration is invalid."""
+            raise InvalidConfigError(msg)
