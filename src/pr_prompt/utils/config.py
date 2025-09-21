@@ -51,6 +51,7 @@ def validate_toml_config(config: dict) -> None:
         "include_commit_messages": lambda x: isinstance(x, bool),
         "repo_path": lambda x: isinstance(x, str),
         "remote": lambda x: isinstance(x, str),
+        "custom_instructions": lambda x: isinstance(x, str),
     }
 
     for field, value in config.items():

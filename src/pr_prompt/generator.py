@@ -47,7 +47,9 @@ class PrPromptGenerator:
         remote: Name of the git remote to use.
             Default: `"origin"`.
         default_base_branch: The default base branch to compare against when base_ref is not provided.
-            Default: Infer from remote (e.g., "main" or "master").
+            Default: Infer from remote (e.g., "origin/main" or "origin/master").
+        custom_instructions: Default custom instructions to use in generate_custom when none provided.
+            Default: `None`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -58,6 +60,7 @@ class PrPromptGenerator:
     repo_path: Optional[str] = None
     remote: str = "origin"
     default_base_branch: Optional[str] = None
+    custom_instructions: Optional[str] = None
 
     @classmethod
     def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
@@ -134,7 +137,7 @@ class PrPromptGenerator:
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
-        instructions: str,
+        instructions: Optional[str] = None,
         pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
@@ -144,13 +147,13 @@ class PrPromptGenerator:
         Args:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
-            instructions: Custom instructions for the LLM.
+            instructions: Custom instructions for the LLM. If None, uses custom_instructions.
             pr_title: The title of the pull request.
             pr_description: The description of the pull request.
 
         """
         return self._generate(
-            instructions,
+            instructions or self.custom_instructions,
             base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
