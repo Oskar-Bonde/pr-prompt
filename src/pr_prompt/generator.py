@@ -9,6 +9,7 @@ from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
 from .utils import GitClient, get_diff_files
 from .utils.config import load_toml_config
+from .utils.errors import MissingCustomInstructionsError
 
 
 @dataclass
@@ -152,8 +153,12 @@ class PrPromptGenerator:
             pr_description: The description of the pull request.
 
         """
+        final_instructions = instructions or self.custom_instructions
+        if final_instructions is None:
+            raise MissingCustomInstructionsError
+
         return self._generate(
-            instructions or self.custom_instructions,
+            final_instructions,
             base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
@@ -193,6 +198,9 @@ class PrPromptGenerator:
         builder.add_changed_files(diff_index)
 
         diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+        builder.add_file_diffs(diff_files)
+
+        return builder.build()
         builder.add_file_diffs(diff_files)
 
         return builder.build()

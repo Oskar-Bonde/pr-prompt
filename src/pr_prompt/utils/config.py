@@ -3,6 +3,8 @@ from pathlib import Path
 import tomllib
 from tomllib import TOMLDecodeError
 
+from .errors import InvalidConfigError
+
 
 def load_toml_config() -> dict:
     toml_path = find_toml_file_path()
@@ -57,12 +59,8 @@ def validate_toml_config(config: dict) -> None:
     for field, value in config.items():
         if field not in validators:
             msg = f"Unknown config field '{field}' in [tool.pr-prompt]"
-            raise InvalidPrPromptTomlError(msg)
+            raise InvalidConfigError(msg)
 
         if not validators[field](value):
             msg = f"Invalid config for '{field}': {value}"
-            raise InvalidPrPromptTomlError(msg)
-
-
-class InvalidPrPromptTomlError(Exception):
-    """Raised when configuration is invalid."""
+            raise InvalidConfigError(msg)
