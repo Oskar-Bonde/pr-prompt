@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from enum import Enum
 from pathlib import Path
-from typing import Callable
+from typing import Annotated
 
 import typer
 
@@ -10,70 +11,58 @@ from .generator import PrPromptGenerator
 app = typer.Typer(help="Generate pull request prompts using git diff.")
 
 
-def _generate_prompt(
-    base_ref: str,
-    output: str,
-    generator_method: Callable[[str], str],
-    prompt_type: str,
-) -> None:
-    """Common logic for generating prompts."""
-    typer.echo(f"Comparing to {base_ref}...")
+class PromptType(str, Enum):
+    review = "review"
+    description = "description"
+    custom = "custom"
 
-    generator = PrPromptGenerator.from_toml()
+
+@app.command()
+def generate(
+    prompt_type: Annotated[
+        PromptType,
+        typer.Argument(
+            PromptType.review,
+            help="Type of prompt to generate",
+            case_sensitive=False,
+        ),
+    ],
+    stdout: Annotated[  # noqa: FBT002
+        bool,
+        typer.Option(
+            "--stdout",
+            help="Output to stdout instead of writing to file",
+        ),
+    ] = False,
+    base_ref: Annotated[
+        str | None,
+        typer.Option(
+            "--base-ref",
+            "-b",
+            help="The branch/commit to compare against. Infer from default branch if not provided",
+        ),
+    ] = None,
+) -> None:
+    """Generate a pull request prompt."""
+    generator = PrPromptGenerator().from_toml()
+
+    if prompt_type == PromptType.review:
+        generator_method = generator.generate_review
+    elif prompt_type == PromptType.description:
+        generator_method = generator.generate_description
+    else:
+        generator_method = generator.generate_custom
+
+    typer.echo("Comparing to base ref...")
+
     prompt = generator_method(base_ref)
 
-    output_path = Path(output)
-    output_path.write_text(prompt, encoding="utf-8")
-
-    typer.echo(f"✅ Wrote pr {prompt_type} prompt to {output_path}")
-
-
-@app.command()
-def review(
-    output: str = typer.Option(
-        "review.md",
-        "--output",
-        "-o",
-        help="Output file path (default: review.md)",
-    ),
-    base_ref: str = typer.Option(
-        ...,
-        "--base-ref",
-        "-b",
-        help="The branch/commit to compare against",
-    ),
-) -> None:
-    """Write a pull request review prompt to <output>."""
-    config = load_config()
-    generator = PrPromptGenerator(
-        blacklist_patterns=config.blacklist_patterns,
-        context_patterns=config.context_patterns,
-    )
-    _generate_prompt(base_ref, output, generator.generate_review, "review")
-
-
-@app.command()
-def description(
-    output: str = typer.Option(
-        "description.md",
-        "--output",
-        "-o",
-        help="Output file path (default: description.md)",
-    ),
-    base_ref: str = typer.Option(
-        ...,
-        "--base-ref",
-        "-b",
-        help="The branch/commit to compare against",
-    ),
-) -> None:
-    """Write a pull request description prompt to <output>."""
-    config = load_config()
-    generator = PrPromptGenerator(
-        blacklist_patterns=config.blacklist_patterns,
-        context_patterns=config.context_patterns,
-    )
-    _generate_prompt(base_ref, output, generator.generate_description, "description")
+    if stdout:
+        typer.echo(prompt)
+    else:
+        output_path = Path(f"{prompt_type.value}.md")
+        output_path.write_text(prompt, encoding="utf-8")
+        typer.echo(f"✅ Wrote pr {prompt_type.value} prompt to {output_path}")
 
 
 def main() -> None:
