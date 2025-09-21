@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Callable
 
 import typer
 from rich.console import Console
@@ -25,9 +25,9 @@ def version_callback(value: bool) -> None:  # noqa: FBT001
 
 
 class PromptType(str, Enum):
-    review = "review"
-    description = "description"
-    custom = "custom"
+    REVIEW = "review"
+    DESCRIPTION = "description"
+    CUSTOM = "custom"
 
 
 @app.command()
@@ -38,7 +38,7 @@ def generate(
             help="Type of prompt to generate",
             case_sensitive=False,
         ),
-    ] = PromptType.review,
+    ] = PromptType.REVIEW,
     base_ref: Annotated[
         str | None,
         typer.Option(
@@ -110,10 +110,10 @@ def get_overrides(
 def get_generator_method(
     generator: PrPromptGenerator,
     prompt_type: PromptType,
-) -> callable:
-    if prompt_type == PromptType.review:
+) -> Callable[[str | None], str]:
+    if prompt_type == PromptType.REVIEW:
         return generator.generate_review
-    if prompt_type == PromptType.description:
+    if prompt_type == PromptType.DESCRIPTION:
         return generator.generate_description
     return generator.generate_custom
 

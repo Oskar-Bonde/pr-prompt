@@ -201,6 +201,3 @@ class PrPromptGenerator:
         builder.add_file_diffs(diff_files)
 
         return builder.build()
-        builder.add_file_diffs(diff_files)
-
-        return builder.build()
