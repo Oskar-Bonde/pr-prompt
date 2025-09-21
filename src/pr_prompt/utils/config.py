@@ -57,6 +57,8 @@ def validate_toml_config(config: dict) -> None:
         "repo_path": lambda x: isinstance(x, str),
         "remote": lambda x: isinstance(x, str),
         "custom_instructions": lambda x: isinstance(x, str),
+        "default_base_branch": lambda x: isinstance(x, str),
+        "fetch_base": lambda x: isinstance(x, bool),
     }
 
     for field, value in config.items():

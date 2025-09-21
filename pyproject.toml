@@ -118,3 +118,9 @@ python_version = "3.9"
 show_error_codes = true
 pretty = true
 disallow_untyped_defs = true
+
+# ===================== pr-prompt =====================
+[tool.pr-prompt]
+blacklist_patterns = ["pyproject.toml"]
+default_base_branch = "main"
+fetch_base = false
