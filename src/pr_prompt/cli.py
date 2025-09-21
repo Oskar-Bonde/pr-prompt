@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Callable
 
 import typer
 
 from .generator import PrPromptGenerator
-from .utils.config import load_config
 
 app = typer.Typer(help="Generate pull request prompts using git diff.")
 
@@ -18,11 +19,7 @@ def _generate_prompt(
     """Common logic for generating prompts."""
     typer.echo(f"Comparing to {base_ref}...")
 
-    config = load_config()
-    generator = PrPromptGenerator(
-        blacklist_patterns=config.blacklist_patterns,
-        context_patterns=config.context_patterns,
-    )
+    generator = PrPromptGenerator.from_toml()
     prompt = generator_method(base_ref)
 
     output_path = Path(output)

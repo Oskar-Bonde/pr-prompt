@@ -1,53 +1,67 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import tomllib
 from tomllib import TOMLDecodeError
 
 
-@dataclass
-class PrPromptConfig:
-    """Configuration for pr-prompt tool."""
+def load_toml_config() -> dict:
+    toml_path = find_toml_file_path()
+    if not toml_path.exists():
+        return {}
 
-    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
-    context_patterns: list[str] = field(default_factory=lambda: ["LLM.md"])
-
-
-def load_config() -> PrPromptConfig:
-    """Load configuration from pyproject.toml."""
-    pyproject_path = find_pyproject_path()
-
-    default_config = PrPromptConfig()
-
-    if not pyproject_path.exists():
-        return PrPromptConfig()
-
-    try:
-        with pyproject_path.open("rb") as f:
-            data = tomllib.load(f)
-
-        pr_prompt_config = data.get("tool", {}).get("pr-prompt", {})
-
-        return PrPromptConfig(
-            blacklist_patterns=pr_prompt_config.get(
-                "blacklist_patterns", default_config.blacklist_patterns
-            ),
-            context_patterns=pr_prompt_config.get(
-                "context_patterns", default_config.context_patterns
-            ),
-        )
-    except TOMLDecodeError:
-        return PrPromptConfig()
+    toml_config = load_config_toml(toml_path)
+    pr_prompt_config = get_pr_prompt_config(toml_config)
+    validate_toml_config(pr_prompt_config)
+    return pr_prompt_config
 
 
-def find_pyproject_path() -> Path:
+def find_toml_file_path() -> Path:
     config_path = Path.cwd()
     while config_path != config_path.parent:
-        pyproject_path = config_path / "pyproject.toml"
-        if pyproject_path.exists():
-            config_path = pyproject_path
-            break
+        # Check for pr_prompt.toml first (higher priority)
+        for filename in ["pr_prompt.toml", "pyproject.toml"]:
+            candidate = config_path / filename
+            if candidate.exists():
+                return candidate
         config_path = config_path.parent
-    else:
-        config_path = Path("pyproject.toml")
-    return config_path
+    return Path("pr_prompt.toml")
+
+
+def load_config_toml(config_path: Path) -> dict[str, dict]:
+    try:
+        with config_path.open("rb") as f:
+            return tomllib.load(f)
+
+    except TOMLDecodeError:
+        return {}
+
+
+def get_pr_prompt_config(config_toml: dict) -> dict:
+    return config_toml.get("tool", {}).get("pr-prompt", {})
+
+
+def validate_toml_config(config: dict) -> None:
+    """Validate TOML configuration values and raise error if invalid."""
+    validators = {
+        "blacklist_patterns": lambda x: isinstance(x, list)
+        and all(isinstance(p, str) for p in x),
+        "context_patterns": lambda x: isinstance(x, list)
+        and all(isinstance(p, str) for p in x),
+        "diff_context_lines": lambda x: isinstance(x, int) and x >= 0,
+        "include_commit_messages": lambda x: isinstance(x, bool),
+        "repo_path": lambda x: isinstance(x, str),
+        "remote": lambda x: isinstance(x, str),
+    }
+
+    for field, value in config.items():
+        if field not in validators:
+            msg = f"Unknown config field '{field}' in [tool.pr-prompt]"
+            raise InvalidPrPromptTomlError(msg)
+
+        if not validators[field](value):
+            msg = f"Invalid config for '{field}': {value}"
+            raise InvalidPrPromptTomlError(msg)
+
+
+class InvalidPrPromptTomlError(Exception):
+    """Raised when configuration is invalid."""

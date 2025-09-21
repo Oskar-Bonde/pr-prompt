@@ -1,11 +1,14 @@
 """Generator for pull request prompts."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Optional
 
 from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
 from .utils import GitClient, get_diff_files
+from .utils.config import load_toml_config
 
 
 @dataclass
@@ -21,10 +24,9 @@ class PrPromptGenerator:
             blacklist_patterns=["*.lock"],
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
+            default_base_branch="origin/main",
         )
         prompt = generator.generate_review(
-            base_ref="origin/main",
-            head_ref=None,
             pr_title="Add new authentication system",
             pr_description="Implements OAuth2 with JWT tokens",
         )
@@ -44,6 +46,8 @@ class PrPromptGenerator:
             Default: Current working directory.
         remote: Name of the git remote to use.
             Default: `"origin"`.
+        default_base_branch: The default base branch to compare against when base_ref is not provided.
+            Default: Infer from remote (e.g., "main" or "master").
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
@@ -53,10 +57,32 @@ class PrPromptGenerator:
     include_commit_messages: bool = True
     repo_path: Optional[str] = None
     remote: str = "origin"
+    default_base_branch: Optional[str] = None
+
+    @classmethod
+    def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
+        """
+        Create a PrPromptGenerator instance from pyproject.toml configuration.
+
+        Args:
+            **overrides: Keyword arguments to override TOML config values.
+                Supported keys: blacklist_patterns, context_patterns, diff_context_lines,
+                include_commit_messages, repo_path, remote, default_base_branch.
+        """
+        toml_config = load_toml_config()
+
+        # Merge TOML config with overrides (overrides take precedence)
+        config = {**toml_config, **overrides}
+
+        # Filter to only include valid dataclass fields
+        valid_fields = {field.name for field in cls.__dataclass_fields__.values()}
+        filtered_config = {k: v for k, v in config.items() if k in valid_fields}
+
+        return cls(**filtered_config)
 
     def generate_review(
         self,
-        base_ref: str,
+        base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
@@ -66,14 +92,14 @@ class PrPromptGenerator:
         Generate a prompt for reviewing a pull request.
 
         Args:
-            base_ref: The base branch/commit to compare against (e.g., "origin/main").
+            base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
             pr_title: The title of the pull request.
             pr_description: The description of the pull request.
         """
         return self._generate(
             REVIEW_INSTRUCTIONS,
-            base_ref,
+            base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
             pr_description=pr_description,
@@ -81,7 +107,7 @@ class PrPromptGenerator:
 
     def generate_description(
         self,
-        base_ref: str,
+        base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
@@ -90,14 +116,14 @@ class PrPromptGenerator:
         Generate a prompt for creating PR descriptions.
 
         Args:
-            base_ref: The base branch/commit to compare against (e.g., "origin/main").
+            base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
             pr_title: The title of the pull request.
 
         """
         return self._generate(
             DESCRIPTION_INSTRUCTIONS,
-            base_ref,
+            base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
             pr_description=None,
@@ -105,7 +131,7 @@ class PrPromptGenerator:
 
     def generate_custom(
         self,
-        base_ref: str,
+        base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
         instructions: str,
@@ -116,7 +142,7 @@ class PrPromptGenerator:
         Generate a pull request prompt with custom instructions.
 
         Args:
-            base_ref: The base branch/commit to compare against.
+            base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
             instructions: Custom instructions for the LLM.
             pr_title: The title of the pull request.
@@ -125,7 +151,7 @@ class PrPromptGenerator:
         """
         return self._generate(
             instructions,
-            base_ref,
+            base_ref or self.default_base_branch,
             head_ref,
             pr_title=pr_title,
             pr_description=pr_description,
@@ -134,7 +160,7 @@ class PrPromptGenerator:
     def _generate(
         self,
         instructions: str,
-        base_ref: str,
+        base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
         pr_title: Optional[str] = None,
@@ -145,7 +171,7 @@ class PrPromptGenerator:
             base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
         )
 
-        git.fetch_branch(base_ref)
+        git.fetch_base_branch()
 
         builder = MarkdownBuilder(git)
 
