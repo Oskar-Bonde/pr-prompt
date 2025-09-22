@@ -58,14 +58,14 @@ def generate(
         list[str] | None,
         typer.Option(
             "--blacklist",
-            help="File patterns to exclude from diff analysis (can be used multiple times)",
+            help="File patterns to exclude from diff. (can be used multiple times)",
         ),
     ] = None,
     context: Annotated[
         list[str] | None,
         typer.Option(
             "--context",
-            help="File patterns to include as context (can be used multiple times)",
+            help="File patterns to include in prompt. (can be used multiple times)",
         ),
     ] = None,
     version: Annotated[  # noqa: ARG001, FBT002

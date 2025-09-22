@@ -62,15 +62,15 @@ Flags:
 
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
-- `blacklist_patterns` `(list[str])` File patterns to exclude from the diff analysis. Default: ["*.lock"]
-- `context_patterns` `(list[str])` File patterns to include in prompt. Used for including documentation that provides context. Default: ["AGENTS.md"]
-- `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: 999999 (full file)
-- `include_commit_messages` `(bool)` Include commit messages section. Default: True
-- `repo_path` `(str | None)` Target repo path. Default: cwd
-- `remote` `(str)` Git remote name. Default: origin
+- `blacklist_patterns` `(list[str])` File patterns to exclude from diff. Default: `["*.lock"]`
+- `context_patterns` `(list[str])` File patterns to include in prompt. Used for including documentation that provides context. Default: `["AGENTS.md"]`
+- `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
+- `include_commit_messages` `(bool)` Include commit messages in prompt. Default: `True`
+- `repo_path` `(str | None)` Target repo path. Default: `cwd`
+- `remote` `(str)` Git remote name. Default: `origin`
 - `default_base_branch` `(str | None)` Used when base_ref not passed. Inferred if omitted.
 - `custom_instructions` `(str | None)` Used when `instructions` are not provided in generate_custom.
-- `fetch_base` `(bool)` Fetch base before diff. Default: True
+- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `True`
 
 ### 📜 Parameter Precedence Order
 Highest wins (later overrides earlier):

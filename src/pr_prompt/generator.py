@@ -34,24 +34,24 @@ class PrPromptGenerator:
         ```
 
     Attributes:
-        blacklist_patterns: File patterns to exclude from the diff analysis.
+        blacklist_patterns: File patterns to exclude from diff.
             Default: `["*.lock"]`.
-        context_patterns: File patterns to select files to include in prompt.
-            Useful for including documentation that provide context for the review.
+        context_patterns: File patterns to include in prompt.
+            Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
         diff_context_lines: Number of context lines around changes in diffs.
             Default: `999999`.
-        include_commit_messages: Whether to include commit messages in the prompt.
+        include_commit_messages: Include commit messages in prompt.
             Default: `True`.
         repo_path: The path to either the worktree directory or the .git directory itself.
             Default: Current working directory.
-        remote: Name of the git remote to use.
+        remote: Git remote name.
             Default: `"origin"`.
-        default_base_branch: The default base branch to compare against when base_ref is not provided.
+        default_base_branch: Used when base_ref not passed. Inferred if omitted.
             Default: Infer from remote (e.g., "main" or "master").
-        custom_instructions: Default custom instructions to use in generate_custom when none provided.
+        custom_instructions: Used when `instructions` are not provided in generate_custom.
             Default: `None`.
-        fetch_base: Whether to fetch the base branch before generating diff.
+        fetch_base: Fetch base ref before generating diff.
             Default: `True`.
     """
 
