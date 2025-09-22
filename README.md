@@ -1,247 +1,148 @@
 # pr-prompt
 
-Generate structured prompts for LLM-powered pull request reviews and descriptions.
+Generate pull request prompts (review, description, or custom) from git diffs, commits, and context files.
 
-`pr-prompt` analyzes git diffs, commit messages, and file changes to create comprehensive prompts that help Large Language Models provide better code reviews and generate meaningful pull request descriptions.
+## 🚀 Features
 
-## Features
+- 🔍 **Diff** - Show difference between current and base branch.
+- 📝 **Multiple Prompt Types**: `review`, `description`, and `custom`.
+- 📁 **Files Tree** - Displays a tree of changed files.
+- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
+- 📚 **Context Patterns** - Include any file in prompt for context.
 
-- 🔍 **Smart Diff Analysis** - Analyzes git diffs with configurable context
-- 📁 **File Tree Visualization** - Shows changed files in a clear tree structure
-- 🎯 **Context-Aware** - Includes relevant documentation and context files
-- 🚫 **Flexible Filtering** - Exclude files with blacklist patterns
-- 📝 **Multiple Prompt Types** - Generate prompts for reviews, descriptions, or custom tasks
-- ⚡ **Easy Integration** - Simple Python API for automation
+- 🐍 **Python API**: Usable as a library in your own tools.
+- 🖥️ **CLI Interface**: Simple command-line for quick use.
+- ⚙️ **TOML Configuration**: Configure via `pyproject.toml`.
+- 👤 **Vendor Agnostic**: Works with any LLM.
 
-## Installation
 
+## 📥 Installation
 ```bash
 pip install pr-prompt
 ```
 
-### Requirements
+### 📚 Requirements
+- Python 3.9+
+- git installed and on PATH (or set GIT_PYTHON_GIT_EXECUTABLE)
 
-`pr-prompt` uses GitPython for git operations. GitPython needs the git executable to be installed on the system and available in your PATH. If it is not in your PATH, you can help GitPython find it by setting the `GIT_PYTHON_GIT_EXECUTABLE=<path/to/git>` environment variable.
+## ⚡ Quick Start
 
-## Quick Start
-
+### 🐍 Python API (PrPromptGenerator)
 ```python
 from pr_prompt import PrPromptGenerator
 
-# Create a generator with default settings
-generator = PrPromptGenerator()
-
-# Generate a code review prompt
-review_prompt = generator.generate_review(
-    base_ref="origin/main",
-    head_ref="feature/auth-system",
-    pr_title="Add OAuth2 authentication",
-    pr_description="Implements secure user authentication with JWT tokens"
-)
-
-print(review_prompt)
+generator = PrPromptGenerator.from_toml()  # uses defaults + any TOML config
+prompt = generator.generate_review()       # compares current HEAD to default base branch
+print(prompt)
 ```
 
-## Usage
-
-### Basic Review Generation
-
-```python
-from pr_prompt import PrPromptGenerator
-
-generator = PrPromptGenerator()
-
-# Generate a prompt for reviewing changes against main branch
-prompt = generator.generate_review(
-    base_ref="origin/main",
-    pr_title="Fix user authentication bug",
-    pr_description="Resolves issue where users couldn't log in with special characters"
-)
-```
-
-### Generate PR Descriptions
-
-```python
-# Generate a prompt to help write PR descriptions
-description_prompt = generator.generate_description(
-    base_ref="origin/main",
-    head_ref="feature/user-dashboard",
-    pr_title="Add user dashboard"
-)
-```
-
-### Custom Prompts
-
-```python
-# Create custom prompts with specific instructions
-custom_prompt = generator.generate_custom(
-    instructions="Focus on security vulnerabilities and performance issues.",
-    base_ref="origin/main",
-    head_ref="feature/payment-processing"
-)
-```
-
-### Configuration Options
-
-```python
-generator = PrPromptGenerator(
-    # Exclude certain file types from diff analysis
-    blacklist_patterns=["*.lock", "*.generated.py", "node_modules/*"],
-    
-    # Include context files that provide additional information
-    context_patterns=["docs/architecture.md", ".github/copilot-instructions.md"],
-    
-    # Number of context lines around changes (default: full file)
-    diff_context_lines=10,
-    
-    # Include commit messages in the prompt
-    include_commit_messages=True
-)
-```
-
-## API Reference
-
-### PrPromptGenerator
-
-The main class for generating pull request prompts.
-
-#### Parameters
-
-- `blacklist_patterns` (list[str]): File patterns to exclude from diff analysis. Default: `["*.lock"]`
-- `context_patterns` (list[str]): Patterns to select context files to include. Default: `["LLM.md"]`
-- `diff_context_lines` (int): Number of context lines around changes. Default: `999999` (full file)
-- `include_commit_messages` (bool): Whether to include commit messages. Default: `True`
-
-#### Methods
-
-##### `generate_review(base_ref, head_ref=None, *, pr_title=None, pr_description=None)`
-
-Generates a prompt optimized for code review with instructions to:
-- Identify bugs, security issues, and performance problems
-- Suggest improvements and best practices
-- Assess code clarity and complexity
-- Provide specific, actionable feedback
-
-##### `generate_description(base_ref, head_ref=None, pr_title=None)`
-
-Generates a prompt for creating comprehensive PR descriptions that:
-- Summarize what the PR accomplishes
-- Explain the context and reasoning
-- Document impact and affected areas
-- Highlight breaking changes
-
-##### `generate_custom(instructions, base_ref, head_ref=None, *, pr_title=None, pr_description=None)`
-
-Generates a prompt with custom instructions for specialized use cases.
-
-## Example Output
-
-The generated prompts include:
-
-1. **Instructions** - Clear guidance for the LLM
-2. **Pull Request Details** - Repository info, branches, title, description, and commits
-3. **Context Files** - Relevant documentation and configuration files
-4. **Changed Files** - Tree view of all modified files
-5. **File Diffs** - Detailed diffs for each changed file
-
-## Advanced Usage
-
-### Working with Different Branches
-
-```python
-# Compare feature branch against develop instead of main
-prompt = generator.generate_review(
-    base_ref="origin/develop",
-    head_ref="feature/new-api"
-)
-
-# Use current branch as feature branch (default behavior)
-prompt = generator.generate_review(base_ref="origin/main")
-```
-
-### Including Documentation
-
-```python
-# Include specific documentation files for context
-generator = PrPromptGenerator(
-    context_patterns=[
-        "docs/coding-standards.md",
-        "CONTRIBUTING.md", 
-        ".github/pull_request_template.md"
-    ]
-)
-```
-
-### Filtering Large Files
-
-```python
-# Exclude generated files and large assets
-generator = PrPromptGenerator(
-    blacklist_patterns=[
-        "*.lock",
-        "*.min.js",
-        "*.bundle.*",
-        "dist/*",
-        "build/*",
-        "*.generated.*"
-    ]
-)
-```
-
-## Integration Examples
-
-### GitHub Actions
-
-```yaml
-name: Generate PR Review Prompt
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  generate-prompt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      
-      - name: Install dependencies
-        run: pip install pr-prompt
-      
-      - name: Generate review prompt
-        run: |
-          python -c "
-          from pr_prompt import PrPromptGenerator
-          generator = PrPromptGenerator()
-          prompt = generator.generate_review('origin/main')
-          print(prompt)
-          "
-```
-
-### Pre-commit Hook
-
+### 🖥️ CLI Usage
 ```bash
-#!/bin/bash
-# .git/hooks/pre-push
+# Review prompt (default type) to review.md
+pr-prompt
 
-python -c "
-from pr_prompt import PrPromptGenerator
-generator = PrPromptGenerator()
-prompt = generator.generate_review('origin/main')
-print('Review prompt generated successfully!')
-"
+# Review prompt to stdout
+pr-prompt review --stdout
+
+# Description prompt to description.md
+pr-prompt description -b main
+
+# Custom prompt (requires custom_instructions in TOML config)
+pr-prompt custom
+```
+Writes `<type>.md` unless `--stdout` is used.
+
+Flags:
+- `--base-ref / -b` base branch or commit
+- `--blacklist` repeatable pattern exclusion
+- `--context` repeatable pattern inclusion
+- `--stdout` print instead of file
+
+## ⚙️ Configuration
+
+### 🔧 Parameters Reference
+PrPromptGenerator / CLI / TOML shared parameters:
+- `blacklist_patterns` `(list[str])` File patterns to exclude from diff. Default: `["*.lock"]`
+- `context_patterns` `(list[str])` File patterns to include in prompt. Used for including documentation that provides context. Default: `["AGENTS.md"]`
+- `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
+- `include_commit_messages` `(bool)` Include commit messages in prompt. Default: `True`
+- `repo_path` `(str | None)` Target repo path. Default: `cwd`
+- `remote` `(str)` Git remote name. Default: `origin`
+- `default_base_branch` `(str | None)` Used when base_ref not passed. Inferred if omitted.
+- `custom_instructions` `(str | None)` Used when `instructions` are not provided in generate_custom.
+- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `True`
+
+### 📜 Parameter Precedence Order
+Highest wins (later overrides earlier):
+1. Internal defaults (dataclass field defaults)
+2. pyproject.toml / pr_prompt.toml [tool.pr-prompt] values
+3. Explicit constructor args / CLI flags (mapped to generator args)
+4. Per-call method arguments (e.g., base_ref passed to generate_review)
+Notes:
+- If you call `generate_review(base_ref=...)`, that overrides both default_base_branch and any TOML value.
+- For CUSTOM prompts: if `instructions` arg omitted, `custom_instructions` (TOML or constructor) must be set or an error is raised.
+
+## 🎯 Prompt Types
+
+### 🔍 Review
+Guides the LLM to write a code review (quality, correctness, security, performance, clarity).
+
+### 📝 Description
+Guides the LLM to write a clear PR description (summary, rationale, impact).
+
+### 🛠️ Custom
+Arbitrary instructions. Requires:
+- Pass `instructions=...` in `generate_custom`, OR
+- Set `custom_instructions` in constructor/TOML (used when CLI type=custom)
+
+## 📋 Prompt Structure
+Generated Markdown sections:
+- Instructions: Role plus review / description / custom goals.
+- Pull Request Details: Repository name, base -> head branch, optional title/description, commit list.
+- Context Files: Inline content from context_patterns for architectural / design background.
+- Changed Files Tree: Condensed tree view of modified paths.
+- File Diffs: Diffs filtered by blacklist_patterns with configured context lines.
+
+## 📄 Prompt Example
+(Review excerpt)
+~~~markdown
+## Instructions
+You are a senior software engineer...
+
+## Pull Request Details
+**Repository:** pr-prompt
+**Branch:** `feature` -> `main`
+**Commits:** Bumped minor
+## Changed Files
+src/
+└── pr_prompt/
+    └── __init__.py
+## File diffs
+### Modified `src/pr_prompt/__init__.py`
+```diff
+-__version__ = "0.3.0"
++__version__ = "0.4.0"
+```
+~~~
+
+## ⚙️ Using pyproject.toml / pr_prompt.toml
+
+### 🔧 Default Configuration
+```toml
+[tool.pr-prompt]
+blacklist_patterns = ["*.lock"]
+context_patterns = ["AGENTS.md"]
+diff_context_lines = 999999
+include_commit_messages = true
+# repo_path =
+remote = "origin"
+# default_base_branch =
+# custom_instructions =
+fetch_base = true
 ```
 
-## License
+## 🤝 Contributing
+Contributions welcome. Please open issues / PRs.
 
-MIT License - see LICENSE file for details.
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines and submit pull requests to our GitHub repository.
+## 📜 License
+MIT License (see LICENSE).

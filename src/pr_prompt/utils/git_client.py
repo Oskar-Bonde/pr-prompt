@@ -20,8 +20,8 @@ class GitClient:
         self.base_ref = self._strip_remote(base_ref) or self.get_default_branch()
         self.head_ref = self._strip_remote(head_ref) or self.repo.active_branch.name
 
-        self.target_commit = self.repo.commit(f"{self.remote.name}/{self.base_ref}")
-        self.feature_commit = self.repo.commit(f"{self.remote.name}/{self.head_ref}")
+        self.base_commit = self.repo.commit(f"{self.remote.name}/{self.base_ref}")
+        self.head_commit = self.repo.commit(self.head_ref)
 
     def _strip_remote(self, ref: Optional[str]) -> Optional[str]:
         """Strip remote name from ref if present."""
@@ -54,7 +54,7 @@ class GitClient:
 
     def get_commit_messages(self) -> list[str]:
         """Get list of commit messages between two refs."""
-        commits = self.repo.iter_commits(f"{self.target_commit}..{self.feature_commit}")
+        commits = self.repo.iter_commits(f"{self.base_commit}..{self.head_commit}")
         return [
             ". ".join(commit.message.strip().split("\n"))
             for commit in commits
@@ -78,8 +78,8 @@ class GitClient:
         return blob_data.decode("utf-8", errors="replace").strip()
 
     def get_diff_index(self, context_lines: int = 999999) -> DiffIndex[Diff]:
-        return self.target_commit.diff(
-            self.feature_commit,
+        return self.base_commit.diff(
+            self.head_commit,
             create_patch=True,
             unified=context_lines,
             diff_algorithm="histogram",
