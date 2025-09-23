@@ -1,6 +1,6 @@
 [project]
 name = "pr-prompt"
-version = "0.4.0"
+version = "0.5.0"
 description = "A tool to generate pull request prompts using git cli commands."
 authors = [{ name = "Oskar Bonde", email = "oskar.bonde@gmail.com" }]
 license = "MIT"
@@ -28,12 +28,12 @@ dev = [
 pr-prompt = "pr_prompt.cli:main"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.8.20"]
+build-backend = "uv_build"
 
 # ===================== bumpversion =====================
 [tool.bumpversion]
-current_version = "0.4.0"
+current_version = "0.5.0"
 
 [[tool.bumpversion.files]]
 filename = "src/pr_prompt/__init__.py"

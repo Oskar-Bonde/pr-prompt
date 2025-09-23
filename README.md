@@ -4,12 +4,14 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 
 ## 🚀 Features
 
+### 🤖 Prompt Generation
 - 🔍 **Diff** - Show difference between current and base branch.
 - 📝 **Multiple Prompt Types**: `review`, `description`, and `custom`.
 - 📁 **Files Tree** - Displays a tree of changed files.
 - 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
 - 📚 **Context Patterns** - Include any file in prompt for context.
 
+### 🛠️ Usage & Integration
 - 🐍 **Python API**: Usable as a library in your own tools.
 - 🖥️ **CLI Interface**: Simple command-line for quick use.
 - ⚙️ **TOML Configuration**: Configure via `pyproject.toml`.
