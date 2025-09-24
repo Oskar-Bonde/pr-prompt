@@ -47,11 +47,11 @@ def generate(
             help="The branch/commit to compare against (e.g., 'main'). Infer from default branch if not provided",
         ),
     ] = None,
-    stdout: Annotated[  # noqa: FBT002
+    write: Annotated[  # noqa: FBT002
         bool,
         typer.Option(
-            "--stdout",
-            help="Output to stdout instead of writing to file",
+            "--write",
+            help="Write to .pr_prompt/<type>.md instead of stdout",
         ),
     ] = False,
     blacklist: Annotated[
@@ -78,22 +78,24 @@ def generate(
     ] = False,
 ) -> None:
     """Generate a pull request prompt."""
-    if not stdout:
+    if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
     overrides = get_overrides(blacklist, context)
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
 
-    if stdout:
-        console.print(Markdown(prompt))
-    else:
-        output_path = Path(f"{prompt_type.value}.md")
+    if write:
+        output_dir = Path(".pr_prompt")
+        output_dir.mkdir(exist_ok=True)
+        output_path = output_dir / f"{prompt_type.value}.md"
         output_path.write_text(prompt, encoding="utf-8")
         console.print(
             f"✅ Wrote pr {prompt_type.value} prompt to {output_path}", style="green"
         )
         console.print(f"File size: {len(prompt):,} characters", style="blue")
+    else:
+        console.print(Markdown(prompt))
 
 
 def get_overrides(

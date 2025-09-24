@@ -40,25 +40,25 @@ print(prompt)
 
 ### 🖥️ CLI Usage
 ```bash
-# Review prompt (default type) to review.md
+# Review prompt (default type) to stdout
 pr-prompt
 
-# Review prompt to stdout
-pr-prompt review --stdout
+# Review prompt saved to .pr_prompt/review.md
+pr-prompt review --write
 
-# Description prompt to description.md
+# Description prompt to stdout
 pr-prompt description -b main
 
 # Custom prompt (requires custom_instructions in TOML config)
 pr-prompt custom
 ```
-Writes `<type>.md` unless `--stdout` is used.
+Outputs to stdout by default. Use `--write` to save to `.pr_prompt/<type>.md`.
 
 Flags:
 - `--base-ref / -b` base branch or commit
 - `--blacklist` repeatable pattern exclusion
 - `--context` repeatable pattern inclusion
-- `--stdout` print instead of file
+- `--write` save to `.pr_prompt/<type>.md` instead of stdout
 
 ## ⚙️ Configuration
 
