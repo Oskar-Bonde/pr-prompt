@@ -100,7 +100,7 @@ Arbitrary instructions. Requires:
 ## 📋 Prompt Structure
 Generated Markdown sections:
 - Instructions: Role plus review / description / custom goals.
-- Pull Request Details: Repository name, base -> head branch, optional title/description, commit list.
+- Pull Request Details: Repository name, base -> head branch, optional description, commit list.
 - Context Files: Inline content from context_patterns for architectural / design background.
 - Changed Files Tree: Condensed tree view of modified paths.
 - File Diffs: Diffs filtered by blacklist_patterns with configured context lines.

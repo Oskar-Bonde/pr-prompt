@@ -38,17 +38,16 @@ class TestMarkdownBuilder:
     """Test prompt building functionality."""
 
     def test_add_metadata_with_title_only(self, mock_git_client: MagicMock) -> None:
-        """Test adding metadata with only title."""
+        """Test adding metadata with description."""
         builder = MarkdownBuilder(mock_git_client)
         builder.add_metadata(
             include_commit_messages=False,
-            pr_title="Fix bug in authentication",
-            pr_description=None,
+            pr_description="Fix bug in authentication",
         )
 
         prompt = builder.build()
         assert "Fix bug in authentication" in prompt
-        assert "**Title:**" in prompt
+        assert "**Description:**" in prompt
 
     def test_add_changed_files(self) -> None:
         """Test changed files display."""
@@ -111,8 +110,9 @@ class TestPrPrompt:
         prompt = generator.generate_review(
             base_ref="origin/main",
             head_ref="feature/test",
-            pr_title="Test PR",
+            pr_description="Test PR",
         )
         assert "Test PR" in prompt
         assert "main.py" in prompt
+        assert "File diffs" in prompt
         assert "File diffs" in prompt
