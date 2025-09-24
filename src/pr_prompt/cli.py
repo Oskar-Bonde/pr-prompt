@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Annotated, Callable
 
 import typer
+from git import Repo
 from rich.console import Console
-from rich.markdown import Markdown
 
 from . import __version__
 from .generator import PrPromptGenerator
@@ -88,14 +88,15 @@ def generate(
     if write:
         output_dir = Path(".pr_prompt")
         output_dir.mkdir(exist_ok=True)
-        output_path = output_dir / f"{prompt_type.value}.md"
+        short_sha = get_short_sha()
+        output_path = output_dir / f"{prompt_type.value}_{short_sha}.md"
         output_path.write_text(prompt, encoding="utf-8")
         console.print(
             f"✅ Wrote pr {prompt_type.value} prompt to {output_path}", style="green"
         )
         console.print(f"File size: {len(prompt):,} characters", style="blue")
     else:
-        console.print(Markdown(prompt))
+        console.print(prompt)
 
 
 def get_overrides(
@@ -118,6 +119,12 @@ def get_generator_method(
     if prompt_type == PromptType.DESCRIPTION:
         return generator.generate_description
     return generator.generate_custom
+
+
+def get_short_sha() -> str:
+    """Get the 7-character short SHA of the current HEAD commit."""
+    repo = Repo()
+    return repo.head.commit.hexsha[:7]
 
 
 def main() -> None:
