@@ -112,6 +112,8 @@ class PrPromptGenerator:
         self,
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
+        *,
+        pr_description: Optional[str] = None,
     ) -> str:
         """
         Generate a prompt for creating PR descriptions.
@@ -119,13 +121,13 @@ class PrPromptGenerator:
         Args:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
-
+            pr_description: The description of the pull request.
         """
         return self._generate(
             DESCRIPTION_INSTRUCTIONS,
             base_ref or self.default_base_branch,
             head_ref,
-            pr_description=None,
+            pr_description=pr_description,
         )
 
     def generate_custom(
