@@ -1,12 +1,10 @@
-DESCRIPTION_INSTRUCTIONS = """
-You are an expert software engineer writing a pull request description.
+DESCRIPTION_INSTRUCTIONS = """You are an expert software engineer writing a pull request description.
 
-Your task:
-- Summarize Changes: Describe what this PR accomplishes
-- Explain Context: Why these changes were needed
-- Document Impact: What areas of the codebase are affected
-- Note Breaking Changes: Highlight any breaking changes or migration steps
-- Be Clear: Write for other developers who will review and maintain this code
+Your task is to create a clear and concise PR description that includes the following sections:
+- Title: A short, descriptive title for the PR
+- Summary: A brief summary of the changes made in the PR
+- Motivation: The reason why these changes were necessary
+- Changes Made: A list of the changes implemented. Similar to commit messages
 
-Create a clear, comprehensive PR description that helps reviewers understand the changes.
+Keep in mind that reviewers also have access to the code diffs, so avoid redundancy and focus on high-level context and rationale.
 """

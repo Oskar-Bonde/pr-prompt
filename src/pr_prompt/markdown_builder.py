@@ -42,7 +42,6 @@ class MarkdownBuilder:
         self,
         *,
         include_commit_messages: bool,
-        pr_title: Optional[str],
         pr_description: Optional[str],
     ) -> None:
         """Add PR metadata section."""
@@ -53,9 +52,6 @@ class MarkdownBuilder:
         content_parts.append(
             f"**Branch:** `{self.git_client.head_ref}` -> `{self.git_client.base_ref}`"
         )
-
-        if pr_title:
-            content_parts.append(f"**Title:** {pr_title}")
 
         if pr_description:
             content_parts.append(f"**Description:**\n\n{pr_description}")

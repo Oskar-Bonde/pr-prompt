@@ -28,7 +28,6 @@ class PrPromptGenerator:
             default_base_branch="main",
         )
         prompt = generator.generate_review(
-            pr_title="Add new authentication system",
             pr_description="Implements OAuth2 with JWT tokens",
         )
         ```
@@ -92,7 +91,6 @@ class PrPromptGenerator:
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
-        pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
         """
@@ -101,14 +99,12 @@ class PrPromptGenerator:
         Args:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
-            pr_title: The title of the pull request.
             pr_description: The description of the pull request.
         """
         return self._generate(
             REVIEW_INSTRUCTIONS,
             base_ref or self.default_base_branch,
             head_ref,
-            pr_title=pr_title,
             pr_description=pr_description,
         )
 
@@ -117,7 +113,7 @@ class PrPromptGenerator:
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
-        pr_title: Optional[str] = None,
+        pr_description: Optional[str] = None,
     ) -> str:
         """
         Generate a prompt for creating PR descriptions.
@@ -125,15 +121,13 @@ class PrPromptGenerator:
         Args:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
-            pr_title: The title of the pull request.
-
+            pr_description: The description of the pull request.
         """
         return self._generate(
             DESCRIPTION_INSTRUCTIONS,
             base_ref or self.default_base_branch,
             head_ref,
-            pr_title=pr_title,
-            pr_description=None,
+            pr_description=pr_description,
         )
 
     def generate_custom(
@@ -142,7 +136,6 @@ class PrPromptGenerator:
         head_ref: Optional[str] = None,
         *,
         instructions: Optional[str] = None,
-        pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
         """
@@ -152,7 +145,6 @@ class PrPromptGenerator:
             base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
             head_ref: The branch/commit with changes. Default: current branch.
             instructions: Custom instructions for the LLM. If None, uses custom_instructions.
-            pr_title: The title of the pull request.
             pr_description: The description of the pull request.
 
         """
@@ -164,7 +156,6 @@ class PrPromptGenerator:
             final_instructions,
             base_ref or self.default_base_branch,
             head_ref,
-            pr_title=pr_title,
             pr_description=pr_description,
         )
 
@@ -174,7 +165,6 @@ class PrPromptGenerator:
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
         *,
-        pr_title: Optional[str] = None,
         pr_description: Optional[str] = None,
     ) -> str:
         """Generate a pull request prompt."""
@@ -191,7 +181,6 @@ class PrPromptGenerator:
 
         builder.add_metadata(
             include_commit_messages=self.include_commit_messages,
-            pr_title=pr_title,
             pr_description=pr_description,
         )
 
