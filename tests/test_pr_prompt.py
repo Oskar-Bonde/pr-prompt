@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pr_prompt.generator import PrPromptGenerator
 from pr_prompt.markdown_builder import MarkdownBuilder
-from pr_prompt.utils import FileFilter
+from pr_prompt.utils import FileFilter, get_diff_files
 
 from .conftest import create_mock_git_client
 
@@ -60,7 +60,9 @@ class TestMarkdownBuilder:
         mock_git = create_mock_git_client(files=files)
         builder = MarkdownBuilder(mock_git)
 
-        builder.add_changed_files_tree(mock_git.get_diff_index())
+        diff_index = mock_git.get_diff_index()
+        diff_files = get_diff_files(diff_index, [])
+        builder.add_changed_files_tree(diff_files)
 
         prompt = builder.build()
         assert "main.py" in prompt

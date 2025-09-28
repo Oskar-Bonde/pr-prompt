@@ -34,7 +34,7 @@ def create_mock_git_client(
     mock_git.get_repo_name.return_value = repo_name
     mock_git.list_files.return_value = files
     mock_git.get_commit_messages.return_value = commit_messages
-    mock_git.fetch_branch.return_value = None
+    mock_git.fetch_base_branch.return_value = None
     mock_git.get_file_content.return_value = "context file content"
 
     # Create mock diff index with proper structure
