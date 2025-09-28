@@ -46,7 +46,7 @@ pr-prompt
 pr-prompt review --write
 
 # Description prompt to stdout
-pr-prompt description -b main
+pr-prompt description -b origin/main
 
 # Custom prompt (requires custom_instructions in TOML config)
 pr-prompt custom
@@ -112,7 +112,7 @@ You are a senior software engineer...
 
 ## Pull Request Details
 **Repository:** pr-prompt
-**Branch:** `feature` -> `main`
+**Branch:** `feature` -> `origin/main`
 **Commits:** Bumped minor
 ## Changed Files
 src/
