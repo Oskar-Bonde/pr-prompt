@@ -8,8 +8,6 @@ from git import Diff, DiffIndex, IndexObject
 from .file_filters import FileFilter
 from .markdown_parser import get_markdown_content
 
-defenc = sys.getfilesystemencoding()
-
 
 class ChangeType(Enum):
     ADDED = "Added"
@@ -122,7 +120,7 @@ def get_content_parts(
 def read_blob(blob: IndexObject) -> str:
     try:
         blob_data: bytes = blob.data_stream.read()
-        file_content = blob_data.decode(defenc)
+        file_content = blob_data.decode("utf-8", errors="replace")
     except UnicodeDecodeError:
         return "[Binary file]"
     else:
@@ -132,4 +130,8 @@ def read_blob(blob: IndexObject) -> str:
 def read_diff(diff: Diff) -> str:
     if diff.diff is None:
         return ""
-    return diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff
+    return (
+        diff.diff.decode("utf-8", errors="replace")
+        if isinstance(diff.diff, bytes)
+        else diff.diff
+    )

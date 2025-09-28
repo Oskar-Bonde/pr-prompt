@@ -46,7 +46,9 @@ def render_tree_node(
         # Build the full file path
         full_path = f"{current_path}/{item}" if current_path else item
 
-        change_prefix = _get_change_prefix(full_path, diff_files)
+        change_prefix = (
+            _get_change_prefix(full_path, diff_files) if not is_folder else "   "
+        )
 
         if is_root:
             # Root level items don't need tree characters

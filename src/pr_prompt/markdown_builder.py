@@ -33,9 +33,7 @@ class MarkdownBuilder:
 
     def add_instructions(self, instructions: str) -> None:
         self.sections.append(
-            MarkdownSection(
-                title="Instructions", content=instructions.removeprefix("\n")
-            )
+            MarkdownSection(title="Instructions", content=instructions.strip())
         )
 
     def add_metadata(
