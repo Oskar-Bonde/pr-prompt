@@ -25,7 +25,7 @@ class PrPromptGenerator:
             blacklist_patterns=["*.lock"],
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
-            default_base_branch="main",
+            default_base_branch="origin/main",
         )
         prompt = generator.generate_review(
             pr_description="Implements OAuth2 with JWT tokens",
@@ -47,7 +47,7 @@ class PrPromptGenerator:
         remote: Git remote name.
             Default: `"origin"`.
         default_base_branch: Used when base_ref not passed. Inferred if omitted.
-            Default: Infer from remote (e.g., "main" or "master").
+            Default: Infer from remote (e.g., "origin/main" or "origin/master").
         custom_instructions: Used when `instructions` are not provided in generate_custom.
             Default: `None`.
         fetch_base: Fetch base ref before generating diff.
@@ -188,9 +188,10 @@ class PrPromptGenerator:
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
-        builder.add_changed_files(diff_index)
-
         diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+
+        builder.add_changed_files_tree(diff_files)
+
         builder.add_file_diffs(diff_files)
 
         return builder.build()

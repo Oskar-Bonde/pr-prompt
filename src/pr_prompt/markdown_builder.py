@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from git import Diff, DiffIndex
-
 from .utils import (
     DiffFile,
     FileFilter,
@@ -35,7 +33,7 @@ class MarkdownBuilder:
 
     def add_instructions(self, instructions: str) -> None:
         self.sections.append(
-            MarkdownSection(title="Instructions", content=instructions)
+            MarkdownSection(title="Instructions", content=instructions.strip())
         )
 
     def add_metadata(
@@ -93,14 +91,9 @@ class MarkdownBuilder:
                 )
             )
 
-    def add_changed_files(self, diff_index: DiffIndex[Diff]) -> None:
+    def add_changed_files_tree(self, diff_files: dict[str, DiffFile]) -> None:
         """Add changed files in a tree format."""
-        files = [
-            path
-            for diff in diff_index
-            if (path := diff.b_path or diff.a_path) is not None
-        ]
-        file_tree = build_file_tree(files) if files else "No files changed"
+        file_tree = build_file_tree(diff_files)
 
         self.sections.append(
             MarkdownSection(
@@ -114,12 +107,10 @@ class MarkdownBuilder:
         self.sections.append(MarkdownSection(title="File diffs"))
 
         for file_path, diff_file in file_diffs.items():
-            content = f"```diff\n{diff_file.content}\n```"
-
             self.sections.append(
                 MarkdownSection(
                     title=f"{diff_file.change_type} `{file_path}`",
-                    content=content,
+                    content=diff_file.content,
                     heading_level=3,
                 )
             )

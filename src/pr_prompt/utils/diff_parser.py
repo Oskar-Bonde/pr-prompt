@@ -1,12 +1,11 @@
-import sys
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
-from git import Diff, DiffIndex
+from git import Diff, DiffIndex, IndexObject
 
 from .file_filters import FileFilter
-
-defenc = sys.getfilesystemencoding()
+from .markdown_parser import get_markdown_content
 
 
 class ChangeType(Enum):
@@ -23,10 +22,24 @@ class DiffFile:
     path: str
     change_type_enum: ChangeType
     content: str
+    rename_from: Optional[str]
 
     @property
     def change_type(self) -> str:
         return self.change_type_enum.value
+
+    @property
+    def change_indicator(self) -> str:
+        """Return single-letter change indicator for compact display."""
+        status_map = {
+            ChangeType.ADDED: "A",
+            ChangeType.DELETED: "D",
+            ChangeType.COPIED: "C",
+            ChangeType.RENAMED: "R",
+            ChangeType.RENAMED_AND_MODIFIED: "R",
+            ChangeType.MODIFIED: "M",
+        }
+        return status_map[self.change_type_enum]
 
 
 def get_diff_files(
@@ -37,23 +50,22 @@ def get_diff_files(
 
     for diff in diffs:
         file_path = diff.b_path or diff.a_path
-        if file_path and not FileFilter.is_match(file_path, blacklist_patterns):
-            content = get_diff_content(diff)
+        if file_path:
+            is_blacklisted = FileFilter.is_match(file_path, blacklist_patterns)
+
             change_type = get_change_type(diff)
-            diff_files[file_path] = DiffFile(file_path, change_type, content)
+            content_parts = get_content_parts(
+                diff, change_type, is_blacklisted=is_blacklisted
+            )
+            content = "\n".join(content_parts)
+
+            diff_files[file_path] = DiffFile(
+                path=file_path,
+                change_type_enum=change_type,
+                content=content,
+                rename_from=diff.rename_from,
+            )
     return diff_files
-
-
-def get_diff_content(diff: Diff) -> str:
-    content = ""
-    if diff.rename_from and diff.rename_to:
-        content += f"\nfile renamed from {diff.rename_from!r} to {diff.rename_to!r}"
-    if diff.diff:
-        content += "\n---"
-        content += (
-            diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff
-        )
-    return content.strip()
 
 
 def get_change_type(diff: Diff) -> ChangeType:
@@ -68,3 +80,57 @@ def get_change_type(diff: Diff) -> ChangeType:
             return ChangeType.RENAMED_AND_MODIFIED
         return ChangeType.RENAMED
     return ChangeType.MODIFIED
+
+
+def get_content_parts(
+    diff: Diff, change_type: ChangeType, *, is_blacklisted: bool
+) -> list[str]:
+    """Get raw content from diff object."""
+    content_parts = []
+
+    if diff.renamed_file and diff.rename_from and diff.rename_to:
+        content_parts.append(
+            f"File renamed from {diff.rename_from!r} to {diff.rename_to!r}"
+        )
+
+    if change_type == ChangeType.RENAMED:
+        return content_parts
+
+    if is_blacklisted:
+        content_parts.append("[Diff ignored]")
+        return content_parts
+
+    if change_type == ChangeType.ADDED and diff.b_blob and diff.b_path:
+        content = read_blob(diff.b_blob)
+        content_parts.append(get_markdown_content(diff.b_path, content))
+
+    elif change_type == ChangeType.DELETED and diff.a_blob and diff.a_path:
+        content = read_blob(diff.a_blob)
+        content_parts.append(get_markdown_content(diff.a_path, content))
+
+    elif diff.diff:
+        content_parts.append("```diff")
+        diff_content = read_diff(diff)
+        content_parts.append(f"{diff_content}```")
+
+    return content_parts
+
+
+def read_blob(blob: IndexObject) -> str:
+    try:
+        blob_data: bytes = blob.data_stream.read()
+        file_content = blob_data.decode("utf-8", errors="replace")
+    except UnicodeDecodeError:
+        return "[Binary file]"
+    else:
+        return file_content
+
+
+def read_diff(diff: Diff) -> str:
+    if diff.diff is None:
+        return ""
+    return (
+        diff.diff.decode("utf-8", errors="replace")
+        if isinstance(diff.diff, bytes)
+        else diff.diff
+    )

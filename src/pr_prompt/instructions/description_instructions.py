@@ -1,4 +1,5 @@
-DESCRIPTION_INSTRUCTIONS = """You are an expert software engineer writing a pull request description.
+DESCRIPTION_INSTRUCTIONS = """
+You are an expert software engineer writing a pull request description.
 
 Your task is to create a clear and concise PR description that includes the following sections:
 - Title: A short, descriptive title for the PR

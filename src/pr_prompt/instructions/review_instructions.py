@@ -20,7 +20,7 @@ Structure your review as a numbered list of issues, ordered by severity (CRITICA
 
 Use the following template for each issue:
 ~~~markdown
-{number}. **[{SEVERITY}]**: {Concise Issue Title}
+{number}. **{SEVERITY}**: {Concise Issue Title}
    - **File**: `{file/path/to/file.ext}`
    - **Line Estimate**: {line_numbers}
    - **Issue**: {Detailed explanation of the problem, why it matters, and potential consequences}
@@ -29,9 +29,8 @@ Use the following template for each issue:
      {problematic code snippet}
      ```
    - **Suggested Fix**: {Clear explanation of the solution}
-     ```diff
-     - {old code}
-     + {new code}
+     ```{language}
+     {new code}
      ```
 ~~~
 """

@@ -4,12 +4,11 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 
 ## 🚀 Features
 
-### 🤖 Prompt Generation
+### 🤖 Pull Request Prompt
+- 📝 **Prompt Instructions**: `review`, `description`, and `custom`.
 - 🔍 **Diff** - Show difference between current and base branch.
-- 📝 **Multiple Prompt Types**: `review`, `description`, and `custom`.
-- 📁 **Files Tree** - Displays a tree of changed files.
-- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
 - 📚 **Context Patterns** - Include any file in prompt for context.
+- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
 
 ### 🛠️ Usage & Integration
 - 🐍 **Python API**: Usable as a library in your own tools.
@@ -47,7 +46,7 @@ pr-prompt
 pr-prompt review --write
 
 # Description prompt to stdout
-pr-prompt description -b main
+pr-prompt description -b origin/main
 
 # Custom prompt (requires custom_instructions in TOML config)
 pr-prompt custom
@@ -113,12 +112,12 @@ You are a senior software engineer...
 
 ## Pull Request Details
 **Repository:** pr-prompt
-**Branch:** `feature` -> `main`
+**Branch:** `feature` -> `origin/main`
 **Commits:** Bumped minor
 ## Changed Files
-src/
-└── pr_prompt/
-    └── __init__.py
+   src/
+   └── pr_prompt/
+M      └── __init__.py
 ## File diffs
 ### Modified `src/pr_prompt/__init__.py`
 ```diff
