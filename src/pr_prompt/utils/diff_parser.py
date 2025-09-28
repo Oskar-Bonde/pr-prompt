@@ -1,6 +1,7 @@
 import sys
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
 from git import Diff, DiffIndex, IndexObject
 
@@ -24,10 +25,24 @@ class DiffFile:
     path: str
     change_type_enum: ChangeType
     content: str
+    rename_from: Optional[str]
 
     @property
     def change_type(self) -> str:
         return self.change_type_enum.value
+
+    @property
+    def change_indicator(self) -> str:
+        """Return single-letter change indicator for compact display."""
+        status_map = {
+            ChangeType.ADDED: "A",
+            ChangeType.DELETED: "D",
+            ChangeType.COPIED: "C",
+            ChangeType.RENAMED: "R",
+            ChangeType.RENAMED_AND_MODIFIED: "R",
+            ChangeType.MODIFIED: "M",
+        }
+        return status_map[self.change_type_enum]
 
 
 def get_diff_files(
@@ -47,7 +62,12 @@ def get_diff_files(
             )
             content = "\n".join(content_parts)
 
-            diff_files[file_path] = DiffFile(file_path, change_type, content)
+            diff_files[file_path] = DiffFile(
+                path=file_path,
+                change_type_enum=change_type,
+                content=content,
+                rename_from=diff.rename_from,
+            )
     return diff_files
 
 

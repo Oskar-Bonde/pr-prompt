@@ -188,9 +188,10 @@ class PrPromptGenerator:
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
-        builder.add_changed_files_tree(diff_index)
-
         diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+
+        builder.add_changed_files_tree(diff_files)
+
         builder.add_file_diffs(diff_files)
 
         return builder.build()
