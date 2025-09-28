@@ -20,7 +20,7 @@ class MarkdownSection:
         """Render the section as markdown."""
         heading = "#" * self.heading_level
         if self.content:
-            return f"{heading} {self.title}\n{self.content}"
+            return f"{heading} {self.title}\n\n{self.content}"
         return f"{heading} {self.title}"
 
 
@@ -33,7 +33,9 @@ class MarkdownBuilder:
 
     def add_instructions(self, instructions: str) -> None:
         self.sections.append(
-            MarkdownSection(title="Instructions", content=instructions)
+            MarkdownSection(
+                title="Instructions", content=instructions.removeprefix("\n")
+            )
         )
 
     def add_metadata(

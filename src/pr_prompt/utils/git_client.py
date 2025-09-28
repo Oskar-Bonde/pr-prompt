@@ -23,27 +23,21 @@ class GitClient:
         self.base_commit = self.repo.commit(self.base_ref)
         self.head_commit = self.repo.commit(self.head_ref)
 
-    def _strip_remote(self, ref: Optional[str]) -> Optional[str]:
-        """Strip remote name from ref if present."""
-        if not ref:
-            return None
-        return ref.removeprefix(f"{self.remote.name}/")
-
     def get_default_branch(self) -> str:
         """Get the default branch name from the remote."""
         try:
             remote_head = self.remote.refs.HEAD
             default_branch = remote_head.reference.remote_head  # type: ignore[attr-defined]
+            return f"{self.remote.name}/{default_branch}"  # noqa: TRY300
         except (AttributeError, IndexError) as err:
             # Fallback to common default branch names
             for branch_name in ["main", "master"]:
                 if f"{self.remote.name}/{branch_name}" in [
                     ref.name for ref in self.remote.refs
                 ]:
-                    default_branch = branch_name
+                    return f"{self.remote.name}/{branch_name}"
             msg = "Could not determine default branch. Please specify base_ref."
             raise InferBaseBranchError(msg) from err
-        return f"{self.remote.name}/{default_branch}"
 
     def fetch_base_branch(self) -> None:
         """Fetch the base ref if it's a remote branch."""
