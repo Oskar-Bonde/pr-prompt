@@ -115,9 +115,9 @@ You are a senior software engineer...
 **Branch:** `feature` -> `origin/main`
 **Commits:** Bumped minor
 ## Changed Files
-src/
-└── pr_prompt/
-    └── __init__.py
+   src/
+   └── pr_prompt/
+M      └── __init__.py
 ## File diffs
 ### Modified `src/pr_prompt/__init__.py`
 ```diff
