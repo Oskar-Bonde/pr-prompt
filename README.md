@@ -4,12 +4,11 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 
 ## 🚀 Features
 
-### 🤖 Prompt Generation
+### 🤖 Pull Request Prompt
+- 📝 **Prompt Instructions**: `review`, `description`, and `custom`.
 - 🔍 **Diff** - Show difference between current and base branch.
-- 📝 **Multiple Prompt Types**: `review`, `description`, and `custom`.
-- 📁 **Files Tree** - Displays a tree of changed files.
-- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
 - 📚 **Context Patterns** - Include any file in prompt for context.
+- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
 
 ### 🛠️ Usage & Integration
 - 🐍 **Python API**: Usable as a library in your own tools.
