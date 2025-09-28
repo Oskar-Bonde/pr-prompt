@@ -93,9 +93,8 @@ def get_content_parts(
 
     elif diff.diff:
         content_parts.append("```diff")
-        content_parts.append("---")
-        content_parts.append(read_diff(diff))
-        content_parts.append("```")
+        diff_content = read_diff(diff)
+        content_parts.append(f"{diff_content}```")
 
     return content_parts
 
