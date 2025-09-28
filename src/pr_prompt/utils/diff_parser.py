@@ -2,9 +2,10 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 
-from git import Diff, DiffIndex
+from git import Diff, DiffIndex, IndexObject
 
 from .file_filters import FileFilter
+from .markdown_parser import get_markdown_content
 
 defenc = sys.getfilesystemencoding()
 
@@ -37,23 +38,17 @@ def get_diff_files(
 
     for diff in diffs:
         file_path = diff.b_path or diff.a_path
-        if file_path and not FileFilter.is_match(file_path, blacklist_patterns):
-            content = get_diff_content(diff)
+        if file_path:
+            is_blacklisted = FileFilter.is_match(file_path, blacklist_patterns)
+
             change_type = get_change_type(diff)
+            content_parts = get_content_parts(
+                diff, change_type, is_blacklisted=is_blacklisted
+            )
+            content = "\n".join(content_parts)
+
             diff_files[file_path] = DiffFile(file_path, change_type, content)
     return diff_files
-
-
-def get_diff_content(diff: Diff) -> str:
-    content = ""
-    if diff.rename_from and diff.rename_to:
-        content += f"\nfile renamed from {diff.rename_from!r} to {diff.rename_to!r}"
-    if diff.diff:
-        content += "\n---"
-        content += (
-            diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff
-        )
-    return content.strip()
 
 
 def get_change_type(diff: Diff) -> ChangeType:
@@ -68,3 +63,54 @@ def get_change_type(diff: Diff) -> ChangeType:
             return ChangeType.RENAMED_AND_MODIFIED
         return ChangeType.RENAMED
     return ChangeType.MODIFIED
+
+
+def get_content_parts(
+    diff: Diff, change_type: ChangeType, *, is_blacklisted: bool
+) -> list[str]:
+    """Get raw content from diff object."""
+    content_parts = []
+
+    if diff.renamed_file and diff.rename_from and diff.rename_to:
+        content_parts.append(
+            f"File renamed from {diff.rename_from!r} to {diff.rename_to!r}"
+        )
+
+    if change_type == ChangeType.RENAMED:
+        return content_parts
+
+    if is_blacklisted:
+        content_parts.append("[Diff ignored]")
+        return content_parts
+
+    if change_type == ChangeType.ADDED and diff.b_blob and diff.b_path:
+        content = read_blob(diff.b_blob)
+        content_parts.append(get_markdown_content(diff.b_path, content))
+
+    elif change_type == ChangeType.DELETED and diff.a_blob and diff.a_path:
+        content = read_blob(diff.a_blob)
+        content_parts.append(get_markdown_content(diff.a_path, content))
+
+    elif diff.diff:
+        content_parts.append("```diff")
+        content_parts.append("---")
+        content_parts.append(read_diff(diff))
+        content_parts.append("```")
+
+    return content_parts
+
+
+def read_blob(blob: IndexObject) -> str:
+    try:
+        blob_data: bytes = blob.data_stream.read()
+        file_content = blob_data.decode(defenc)
+    except UnicodeDecodeError:
+        return "[Binary file]"
+    else:
+        return file_content
+
+
+def read_diff(diff: Diff) -> str:
+    if diff.diff is None:
+        return ""
+    return diff.diff.decode(defenc) if isinstance(diff.diff, bytes) else diff.diff

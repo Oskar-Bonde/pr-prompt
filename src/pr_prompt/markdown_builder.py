@@ -93,7 +93,7 @@ class MarkdownBuilder:
                 )
             )
 
-    def add_changed_files(self, diff_index: DiffIndex[Diff]) -> None:
+    def add_changed_files_tree(self, diff_index: DiffIndex[Diff]) -> None:
         """Add changed files in a tree format."""
         files = [
             path
@@ -114,12 +114,10 @@ class MarkdownBuilder:
         self.sections.append(MarkdownSection(title="File diffs"))
 
         for file_path, diff_file in file_diffs.items():
-            content = f"```diff\n{diff_file.content}\n```"
-
             self.sections.append(
                 MarkdownSection(
                     title=f"{diff_file.change_type} `{file_path}`",
-                    content=content,
+                    content=diff_file.content,
                     heading_level=3,
                 )
             )

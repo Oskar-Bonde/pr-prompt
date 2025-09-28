@@ -60,7 +60,7 @@ class TestMarkdownBuilder:
         mock_git = create_mock_git_client(files=files)
         builder = MarkdownBuilder(mock_git)
 
-        builder.add_changed_files(mock_git.get_diff_index())
+        builder.add_changed_files_tree(mock_git.get_diff_index())
 
         prompt = builder.build()
         assert "main.py" in prompt
