@@ -42,7 +42,8 @@ class GitClient:
     def fetch_base_branch(self) -> None:
         """Fetch the base ref if it's a remote branch."""
         if self.base_ref.startswith(f"{self.remote.name}/"):
-            self.remote.fetch(self.base_ref)
+            ref = self.base_ref.removeprefix(f"{self.remote.name}/")
+            self.remote.fetch(ref)
 
     def get_commit_messages(self) -> list[str]:
         """Get list of commit messages between two refs."""
