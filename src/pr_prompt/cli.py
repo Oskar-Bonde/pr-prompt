@@ -68,6 +68,13 @@ def generate(
             help="File patterns to include in prompt. (can be used multiple times)",
         ),
     ] = None,
+    fetch: Annotated[
+        bool | None,
+        typer.Option(
+            "--fetch/--no-fetch",
+            help="Fetch the base ref before generating diffs",
+        ),
+    ] = None,
     version: Annotated[  # noqa: ARG001, FBT002
         bool,
         typer.Option(
@@ -80,7 +87,7 @@ def generate(
     """Generate a pull request prompt."""
     if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
-    overrides = get_overrides(blacklist, context)
+    overrides = get_overrides(blacklist, context, fetch)
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
@@ -100,13 +107,17 @@ def generate(
 
 
 def get_overrides(
-    blacklist: list[str] | None, context: list[str] | None
-) -> dict[str, list[str]]:
+    blacklist: list[str] | None,
+    context: list[str] | None,
+    fetch: bool | None,  # noqa: FBT001
+) -> dict:
     overrides = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
     if context is not None:
         overrides["context_patterns"] = context
+    if fetch is not None:
+        overrides["fetch_base"] = fetch
     return overrides
 
 

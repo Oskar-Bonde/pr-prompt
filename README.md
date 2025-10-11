@@ -56,6 +56,7 @@ Flags:
 - `--write` save to `.pr_prompt/<type>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
 - `--context` repeatable pattern inclusion
+- `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`
 
 ## ⚙️ Configuration
 
@@ -69,7 +70,7 @@ PrPromptGenerator / CLI / TOML shared parameters:
 - `remote` `(str)` Git remote name. Default: `origin`
 - `default_base_branch` `(str | None)` Used when base_ref not passed. Inferred if omitted.
 - `custom_instructions` `(str | None)` Used when `instructions` are not provided in generate_custom.
-- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `True`
+- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 
 ### 📜 Parameter Precedence Order
 Highest wins (later overrides earlier):
@@ -137,7 +138,7 @@ include_commit_messages = true
 remote = "origin"
 # default_base_branch =
 # custom_instructions =
-fetch_base = true
+fetch_base = false
 ```
 
 ## 🤝 Contributing

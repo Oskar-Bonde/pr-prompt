@@ -51,19 +51,19 @@ class PrPromptGenerator:
         custom_instructions: Used when `instructions` are not provided in generate_custom.
             Default: `None`.
         fetch_base: Fetch base ref before generating diff.
-            Default: `True`.
+            Default: `False`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
     context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
 
+    fetch_base: bool = False
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
     repo_path: Optional[str] = None
     remote: str = "origin"
     default_base_branch: Optional[str] = None
     custom_instructions: Optional[str] = None
-    fetch_base: bool = True
 
     @classmethod
     def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
