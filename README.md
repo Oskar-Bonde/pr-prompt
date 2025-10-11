@@ -5,10 +5,10 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 ## 🚀 Features
 
 ### 🤖 Pull Request Prompt
-- **Prompt Instructions** - Generate review or description prompts, or supply custom instructions.
-- **Diff** - Display differences between the current and base branches.
-- **Context Patterns** - Include matched files in the prompt for additional context.
-- **Blacklist Patterns** - Exclude noisy files (e.g., `*.lock`).
+- **Prompt Instructions**: Generate review or description prompts, or supply custom instructions.
+- **Diff**: Display differences between the current and base branches.
+- **Context Patterns**: Include matched files in the prompt for additional context.
+- **Blacklist Patterns**: Exclude noisy files (e.g., `*.lock`).
 
 ### 🛠️ Usage & Integration
 - **Python API**: Usable as a library in your own tools.
@@ -51,19 +51,26 @@ pr-prompt custom
 # Copy review prompt to clipboard
 pr-prompt review | xclip -selection clipboard
 ```
-Flags:
+Options:
 - `--base-ref / -b` base branch or commit
-- `--write` save to `.pr_prompt/<type>.md` instead of stdout
+- `--write` save to `.pr_prompt/<type>_<git_sha>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
 - `--context` repeatable pattern inclusion
 - `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`
+
+### 🔗 Shell Aliases
+Add to your shell config (e.g., `~/.bashrc` or `~/.zshrc`):
+```bash
+alias review='uvx pr-prompt review | xclip -selection clipboard'
+alias desc='uvx pr-prompt description | xclip -selection clipboard'
+```
 
 ## ⚙️ Configuration
 
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
-- `blacklist_patterns` `(list[str])` File patterns to exclude from diff. Default: `["*.lock"]`
-- `context_patterns` `(list[str])` File patterns to include in prompt. Used for including documentation that provides context. Default: `["AGENTS.md"]`
+- `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock"]`
+- `context_patterns` `(list[str])` File patterns to include in prompt (after blacklist filtering). Default: `["AGENTS.md"]`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
 - `include_commit_messages` `(bool)` Include commit messages in prompt. Default: `True`
 - `repo_path` `(str | None)` Target repo path. Default: `cwd`
@@ -78,9 +85,10 @@ Highest wins (later overrides earlier):
 2. pyproject.toml / pr_prompt.toml [tool.pr-prompt] values
 3. Explicit constructor args / CLI flags (mapped to generator args)
 4. Per-call method arguments (e.g., base_ref passed to generate_review)
+
 Notes:
 - If you call `generate_review(base_ref=...)`, that overrides both default_base_branch and any TOML value.
-- For CUSTOM prompts: if `instructions` arg omitted, `custom_instructions` (TOML or constructor) must be set or an error is raised.
+- For `custom` prompts: if `instructions` arg omitted, `custom_instructions` (TOML or constructor) must be set or an error is raised.
 
 ## 🎯 Prompt Types
 
@@ -95,30 +103,26 @@ Arbitrary instructions. Requires:
 - Pass `instructions=...` in `generate_custom`, OR
 - Set `custom_instructions` in constructor/TOML (used when CLI type=custom)
 
-## 📋 Prompt Structure
-Generated Markdown sections:
-- Instructions: Role plus review / description / custom goals.
-- Pull Request Details: Repository name, base -> head branch, optional description, commit list.
-- Context Files: Inline content from context_patterns for architectural / design background.
-- Changed Files Tree: Condensed tree view of modified paths.
-- File Diffs: Diffs filtered by blacklist_patterns with configured context lines.
-
 ## 📄 Prompt Example
-(Review excerpt)
 ~~~markdown
 ## Instructions
 You are a senior software engineer...
 
 ## Pull Request Details
-**Repository:** pr-prompt
-**Branch:** `feature` -> `origin/main`
-**Commits:** Bumped minor
+Repository: pr-prompt
+Branch: `feature` -> `origin/main`
+Commits: Bumped minor
+
+## Context Files
+File: `README.md`...
+
 ## Changed Files
-   src/
-   └── pr_prompt/
-M      └── __init__.py
+   `src`/
+   └── `pr_prompt`/
+M      └── `__init__.py`
+
 ## File diffs
-### Modified `src/pr_prompt/__init__.py`
+Modified `src/pr_prompt/__init__.py`
 ```diff
 -__version__ = "0.3.0"
 +__version__ = "0.4.0"
