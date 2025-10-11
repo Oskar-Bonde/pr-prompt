@@ -5,16 +5,16 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 ## 🚀 Features
 
 ### 🤖 Pull Request Prompt
-- 📝 **Prompt Instructions**: `review`, `description`, and `custom`.
-- 🔍 **Diff** - Show difference between current and base branch.
-- 📚 **Context Patterns** - Include any file in prompt for context.
-- 🚫 **Blacklist Patterns** - Exclude noisy files like `*.lock`.
+- **Prompt Instructions** - Generate review or description prompts, or supply custom instructions.
+- **Diff** - Display differences between the current and base branches.
+- **Context Patterns** - Include matched files in the prompt for additional context.
+- **Blacklist Patterns** - Exclude noisy files (e.g., `*.lock`).
 
 ### 🛠️ Usage & Integration
-- 🐍 **Python API**: Usable as a library in your own tools.
-- 🖥️ **CLI Interface**: Simple command-line for quick use.
-- ⚙️ **TOML Configuration**: Configure via `pyproject.toml`.
-- 👤 **Vendor Agnostic**: Works with any LLM.
+- **Python API**: Usable as a library in your own tools.
+- **CLI Interface**: Simple command-line for quick use.
+- **TOML Configuration**: Configure via `pyproject.toml`.
+- **Vendor Agnostic**: Works with any LLM.
 
 
 ## 📥 Installation
@@ -42,22 +42,20 @@ print(prompt)
 # Review prompt (default type) to stdout
 pr-prompt
 
-# Review prompt saved to .pr_prompt/review.md
-pr-prompt review --write
-
 # Description prompt to stdout
-pr-prompt description -b origin/main
+pr-prompt description
 
 # Custom prompt (requires custom_instructions in TOML config)
 pr-prompt custom
-```
-Outputs to stdout by default. Use `--write` to save to `.pr_prompt/<type>.md`.
 
+# Copy review prompt to clipboard
+pr-prompt review | xclip -selection clipboard
+```
 Flags:
 - `--base-ref / -b` base branch or commit
+- `--write` save to `.pr_prompt/<type>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
 - `--context` repeatable pattern inclusion
-- `--write` save to `.pr_prompt/<type>.md` instead of stdout
 
 ## ⚙️ Configuration
 
