@@ -16,8 +16,6 @@ dependencies = [
 dev = [
     "bump-my-version",
     "mypy",
-    "pylint",
-    "pylint-pytest",
     "pytest",
     "pytest-cov",
     "pytest-randomly",
@@ -68,7 +66,7 @@ ignore = [
     "TRY003", # avoid specifying long messages outside the exception class
     "UP045",  # use `X | None` for type annotations instead of `Optional[X]`
 ]
-pylint.max-args = 6
+pylint.max-args = 7
 explicit-preview-rules = true
 
 [tool.ruff.lint.per-file-ignores]
@@ -82,34 +80,6 @@ explicit-preview-rules = true
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
-
-# ===================== pylint =====================
-
-[tool.pylint.main]
-load-plugins = ["pylint_pytest"]
-
-[tool.pylint.design]
-max-args = 6
-max-positional-arguments = 3
-min-public-methods = 1
-
-[tool.pylint.format]
-max-line-length = 150
-
-[tool.pylint.messages_control]
-disable = [
-    "logging-fstring-interpolation,",
-    "missing-class-docstring",
-    "missing-function-docstring",
-    "missing-module-docstring",
-]
-enable = ["useless-suppression"]
-
-[tool.pylint.similarities]
-min-similarity-lines = 15
-
-[tool.pylint.variables]
-ignored-argument-names = "^self$|^cls$|^scope$|^construct_id$|_.*"
 
 # ===================== mypy =====================
 
