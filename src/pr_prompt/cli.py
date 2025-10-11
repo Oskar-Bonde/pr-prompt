@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Callable
@@ -92,6 +93,8 @@ def generate(
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
 
+    if not write:
+        sys.stdout.write(prompt)
     if write:
         output_dir = Path(".pr_prompt")
         output_dir.mkdir(exist_ok=True)
@@ -102,8 +105,6 @@ def generate(
             f"✅ Wrote pr {prompt_type.value} prompt to {output_path}", style="green"
         )
         console.print(f"File size: {len(prompt):,} characters", style="blue")
-    else:
-        console.print(prompt)
 
 
 def get_overrides(
