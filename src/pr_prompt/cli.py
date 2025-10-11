@@ -110,8 +110,8 @@ def get_overrides(
     blacklist: list[str] | None,
     context: list[str] | None,
     fetch: bool | None,  # noqa: FBT001
-) -> dict:
-    overrides = {}
+) -> dict[str, list[str] | bool]:
+    overrides: dict[str, list[str] | bool] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
     if context is not None:
