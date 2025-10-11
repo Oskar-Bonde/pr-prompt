@@ -33,9 +33,9 @@ class PrPromptGenerator:
         ```
 
     Attributes:
-        blacklist_patterns: File patterns to exclude from diff.
+        blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
             Default: `["*.lock"]`.
-        context_patterns: File patterns to include in prompt.
+        context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
         diff_context_lines: Number of context lines around changes in diffs.
@@ -184,7 +184,7 @@ class PrPromptGenerator:
             pr_description=pr_description,
         )
 
-        builder.add_context_files(self.context_patterns)
+        builder.add_context_files(self.context_patterns, self.blacklist_patterns)
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
