@@ -53,7 +53,7 @@ pr-prompt review | xclip -selection clipboard
 ```
 Options:
 - `--base-ref / -b` base branch or commit
-- `--write` save to `.pr_prompt/<type>_<git_sha>.md` instead of stdout
+- `--write` save to `.pr_prompt/<type>_<timestamp>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
 - `--context` repeatable pattern inclusion
 - `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`

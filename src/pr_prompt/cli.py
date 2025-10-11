@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import datetime
 import sys
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Callable
 
 import typer
-from git import Repo
 from rich.console import Console
 
 from . import __version__
@@ -52,7 +52,7 @@ def generate(
         bool,
         typer.Option(
             "--write",
-            help="Write to .pr_prompt/<type>.md instead of stdout",
+            help="Write to .pr_prompt/<type>_<timestamp>.md instead of stdout. Timestamp: UTC YYYY-MM-DD_HH-MM-SS",
         ),
     ] = False,
     blacklist: Annotated[
@@ -95,16 +95,9 @@ def generate(
 
     if not write:
         sys.stdout.write(prompt)
-    if write:
-        output_dir = Path(".pr_prompt")
-        output_dir.mkdir(exist_ok=True)
-        short_sha = get_short_sha()
-        output_path = output_dir / f"{prompt_type.value}_{short_sha}.md"
-        output_path.write_text(prompt, encoding="utf-8")
-        console.print(
-            f"✅ Wrote pr {prompt_type.value} prompt to {output_path}", style="green"
-        )
-        console.print(f"File size: {len(prompt):,} characters", style="blue")
+
+    else:
+        write_prompt_to_file(prompt_type, prompt)
 
 
 def get_overrides(
@@ -133,10 +126,16 @@ def get_generator_method(
     return generator.generate_custom
 
 
-def get_short_sha() -> str:
-    """Get the 7-character short SHA of the current HEAD commit."""
-    repo = Repo()
-    return repo.head.commit.hexsha[:7]
+def write_prompt_to_file(prompt_type: PromptType, prompt: str) -> None:
+    output_dir = Path(".pr_prompt")
+    output_dir.mkdir(exist_ok=True)
+    timestamp = datetime.datetime.now(tz=datetime.UTC).strftime("%Y-%m-%d_%H-%M-%S")
+    output_path = output_dir / f"{prompt_type.value}_{timestamp}.md"
+    output_path.write_text(prompt, encoding="utf-8")
+    console.print(
+        f"✅ Wrote pr {prompt_type.value} prompt to '{output_path}'", style="green"
+    )
+    console.print(f"File size: {len(prompt):,} characters", style="blue")
 
 
 def main() -> None:
