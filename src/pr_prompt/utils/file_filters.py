@@ -16,10 +16,11 @@ class FileFilter:
         """Return sorted files matching any of the given patterns."""
         if not patterns:
             return []
+        return sorted(file for file in files if FileFilter.is_match(file, patterns))
 
-        matched = set()
-        for pattern in patterns:
-            for file in files:
-                if fnmatch.fnmatch(file, pattern):
-                    matched.add(file)
-        return sorted(matched)
+    @staticmethod
+    def filter(files: list[str], patterns: list[str]) -> list[str]:
+        """Return sorted files **not** matching any of the given patterns."""
+        if not patterns:
+            return sorted(files)
+        return sorted(file for file in files if not FileFilter.is_match(file, patterns))

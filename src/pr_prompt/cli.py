@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import datetime
+import sys
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Callable
 
 import typer
-from git import Repo
 from rich.console import Console
 
 from . import __version__
@@ -51,7 +52,7 @@ def generate(
         bool,
         typer.Option(
             "--write",
-            help="Write to .pr_prompt/<type>.md instead of stdout",
+            help="Write to .pr_prompt/<type>_<timestamp>.md instead of stdout. Timestamp: UTC YYYY-MM-DD_HH-MM-SS",
         ),
     ] = False,
     blacklist: Annotated[
@@ -68,6 +69,13 @@ def generate(
             help="File patterns to include in prompt. (can be used multiple times)",
         ),
     ] = None,
+    fetch: Annotated[
+        bool | None,
+        typer.Option(
+            "--fetch/--no-fetch",
+            help="Fetch the base ref before generating diffs",
+        ),
+    ] = None,
     version: Annotated[  # noqa: ARG001, FBT002
         bool,
         typer.Option(
@@ -80,33 +88,30 @@ def generate(
     """Generate a pull request prompt."""
     if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
-    overrides = get_overrides(blacklist, context)
+    overrides = get_overrides(blacklist, context, fetch)
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
 
-    if write:
-        output_dir = Path(".pr_prompt")
-        output_dir.mkdir(exist_ok=True)
-        short_sha = get_short_sha()
-        output_path = output_dir / f"{prompt_type.value}_{short_sha}.md"
-        output_path.write_text(prompt, encoding="utf-8")
-        console.print(
-            f"✅ Wrote pr {prompt_type.value} prompt to {output_path}", style="green"
-        )
-        console.print(f"File size: {len(prompt):,} characters", style="blue")
+    if not write:
+        print(prompt)  # noqa: T201
+
     else:
-        console.print(prompt)
+        write_prompt_to_file(prompt_type, prompt)
 
 
 def get_overrides(
-    blacklist: list[str] | None, context: list[str] | None
-) -> dict[str, list[str]]:
-    overrides = {}
+    blacklist: list[str] | None,
+    context: list[str] | None,
+    fetch: bool | None,  # noqa: FBT001
+) -> dict[str, list[str] | bool]:
+    overrides: dict[str, list[str] | bool] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
     if context is not None:
         overrides["context_patterns"] = context
+    if fetch is not None:
+        overrides["fetch_base"] = fetch
     return overrides
 
 
@@ -121,10 +126,18 @@ def get_generator_method(
     return generator.generate_custom
 
 
-def get_short_sha() -> str:
-    """Get the 7-character short SHA of the current HEAD commit."""
-    repo = Repo()
-    return repo.head.commit.hexsha[:7]
+def write_prompt_to_file(prompt_type: PromptType, prompt: str) -> None:
+    output_dir = Path(".pr_prompt")
+    output_dir.mkdir(exist_ok=True)
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+    output_path = output_dir / f"{prompt_type.value}_{timestamp}.md"
+    output_path.write_text(prompt, encoding="utf-8")
+    console.print(
+        f"✅ Wrote pr {prompt_type.value} prompt to '{output_path}'", style="green"
+    )
+    console.print(f"File size: {len(prompt):,} characters", style="blue")
 
 
 def main() -> None:

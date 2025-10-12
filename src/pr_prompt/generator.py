@@ -33,11 +33,13 @@ class PrPromptGenerator:
         ```
 
     Attributes:
-        blacklist_patterns: File patterns to exclude from diff.
+        blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
             Default: `["*.lock"]`.
-        context_patterns: File patterns to include in prompt.
+        context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
+        fetch_base: Fetch base ref before generating diff.
+            Default: `False`.
         diff_context_lines: Number of context lines around changes in diffs.
             Default: `999999`.
         include_commit_messages: Include commit messages in prompt.
@@ -50,20 +52,18 @@ class PrPromptGenerator:
             Default: Infer from remote (e.g., "origin/main" or "origin/master").
         custom_instructions: Used when `instructions` are not provided in generate_custom.
             Default: `None`.
-        fetch_base: Fetch base ref before generating diff.
-            Default: `True`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
     context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
 
+    fetch_base: bool = False
     diff_context_lines: int = 999999
     include_commit_messages: bool = True
     repo_path: Optional[str] = None
     remote: str = "origin"
     default_base_branch: Optional[str] = None
     custom_instructions: Optional[str] = None
-    fetch_base: bool = True
 
     @classmethod
     def from_toml(cls, **overrides: list[str] | int | bool | str) -> PrPromptGenerator:
@@ -184,7 +184,7 @@ class PrPromptGenerator:
             pr_description=pr_description,
         )
 
-        builder.add_context_files(self.context_patterns)
+        builder.add_context_files(self.context_patterns, self.blacklist_patterns)
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
