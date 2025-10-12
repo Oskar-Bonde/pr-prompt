@@ -71,13 +71,13 @@ alias desc='uvx pr-prompt description | xclip -selection clipboard'
 PrPromptGenerator / CLI / TOML shared parameters:
 - `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock"]`
 - `context_patterns` `(list[str])` File patterns to include in prompt (after blacklist filtering). Default: `["AGENTS.md"]`
+- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
 - `include_commit_messages` `(bool)` Include commit messages in prompt. Default: `True`
 - `repo_path` `(str | None)` Target repo path. Default: `cwd`
 - `remote` `(str)` Git remote name. Default: `origin`
 - `default_base_branch` `(str | None)` Used when base_ref not passed. Inferred if omitted.
 - `custom_instructions` `(str | None)` Used when `instructions` are not provided in generate_custom.
-- `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 
 ### 📜 Parameter Precedence Order
 Highest wins (later overrides earlier):
@@ -136,13 +136,13 @@ Modified `src/pr_prompt/__init__.py`
 [tool.pr-prompt]
 blacklist_patterns = ["*.lock"]
 context_patterns = ["AGENTS.md"]
+fetch_base = false
 diff_context_lines = 999999
 include_commit_messages = true
 # repo_path =
 remote = "origin"
 # default_base_branch =
 # custom_instructions =
-fetch_base = false
 ```
 
 ## 🤝 Contributing

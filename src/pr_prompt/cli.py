@@ -94,7 +94,7 @@ def generate(
     prompt = generator_method(base_ref)
 
     if not write:
-        sys.stdout.write(prompt)
+        print(prompt)  # noqa: T201
 
     else:
         write_prompt_to_file(prompt_type, prompt)
@@ -129,7 +129,9 @@ def get_generator_method(
 def write_prompt_to_file(prompt_type: PromptType, prompt: str) -> None:
     output_dir = Path(".pr_prompt")
     output_dir.mkdir(exist_ok=True)
-    timestamp = datetime.datetime.now(tz=datetime.UTC).strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
     output_path = output_dir / f"{prompt_type.value}_{timestamp}.md"
     output_path.write_text(prompt, encoding="utf-8")
     console.print(

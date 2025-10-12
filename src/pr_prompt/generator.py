@@ -38,6 +38,8 @@ class PrPromptGenerator:
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
+        fetch_base: Fetch base ref before generating diff.
+            Default: `False`.
         diff_context_lines: Number of context lines around changes in diffs.
             Default: `999999`.
         include_commit_messages: Include commit messages in prompt.
@@ -50,8 +52,6 @@ class PrPromptGenerator:
             Default: Infer from remote (e.g., "origin/main" or "origin/master").
         custom_instructions: Used when `instructions` are not provided in generate_custom.
             Default: `None`.
-        fetch_base: Fetch base ref before generating diff.
-            Default: `False`.
     """
 
     blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
