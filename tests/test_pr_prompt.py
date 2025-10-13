@@ -15,7 +15,7 @@ class TestFileFilter:
     def test_match_no_patterns(self) -> None:
         """Test match with no patterns returns empty list."""
         files = ["main.py", "test.py"]
-        assert FileFilter.match(files, []) == []
+        assert FileFilter.include(files, []) == []
 
     def test_match_with_patterns(self) -> None:
         """Test match returns files matching patterns."""
@@ -26,7 +26,7 @@ class TestFileFilter:
             "README.md",
         ]
         patterns = ["src/*.py", "*.md"]
-        result = FileFilter.match(files, patterns)
+        result = FileFilter.include(files, patterns)
         assert sorted(result) == [
             "README.md",
             "src/main.py",

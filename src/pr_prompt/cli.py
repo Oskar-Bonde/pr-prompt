@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import sys
 from enum import Enum
 from pathlib import Path
 from typing import Annotated, Callable
@@ -45,35 +44,36 @@ def generate(
         typer.Option(
             "--base-ref",
             "-b",
-            help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided",
+            help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
         ),
     ] = None,
     write: Annotated[  # noqa: FBT002
         bool,
         typer.Option(
             "--write",
-            help="Write to .pr_prompt/<type>_<timestamp>.md instead of stdout. Timestamp: UTC YYYY-MM-DD_HH-MM-SS",
+            help="Write to .pr_prompt/<type>_<timestamp>.md instead of stdout. Timestamp: UTC 'YYYY-MM-DD_HH-MM-SS'.",
         ),
     ] = False,
     blacklist: Annotated[
         list[str] | None,
         typer.Option(
             "--blacklist",
-            help="File patterns to exclude from diff. (can be used multiple times)",
+            help="File patterns to exclude from diff and context files. Can be used multiple times.",
         ),
     ] = None,
     context: Annotated[
         list[str] | None,
         typer.Option(
             "--context",
-            help="File patterns to include in prompt. (can be used multiple times)",
+            help="File patterns to include in prompt. Can be used multiple times.",
         ),
     ] = None,
     fetch: Annotated[
         bool | None,
         typer.Option(
             "--fetch/--no-fetch",
-            help="Fetch the base ref before generating diffs",
+            help="Fetch the base ref before generating diffs. Default: False.",
+            show_default=False,
         ),
     ] = None,
     version: Annotated[  # noqa: ARG001, FBT002

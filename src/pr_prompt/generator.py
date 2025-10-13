@@ -72,8 +72,8 @@ class PrPromptGenerator:
 
         Args:
             **overrides: Keyword arguments to override TOML config values.
-                Supported keys: blacklist_patterns, context_patterns, diff_context_lines,
-                include_commit_messages, repo_path, remote, default_base_branch.
+                Supported keys: blacklist_patterns, context_patterns, fetch_base, diff_context_lines,
+                include_commit_messages, repo_path, remote, default_base_branch, custom_instructions.
         """
         toml_config = load_toml_config()
 
