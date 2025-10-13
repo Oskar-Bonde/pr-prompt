@@ -12,14 +12,14 @@ class FileFilter:
         return any(fnmatch.fnmatch(file_path, pattern) for pattern in patterns)
 
     @staticmethod
-    def match(files: list[str], patterns: list[str]) -> list[str]:
+    def include(files: list[str], patterns: list[str]) -> list[str]:
         """Return sorted files matching any of the given patterns."""
         if not patterns:
             return []
         return sorted(file for file in files if FileFilter.is_match(file, patterns))
 
     @staticmethod
-    def filter(files: list[str], patterns: list[str]) -> list[str]:
+    def exclude(files: list[str], patterns: list[str]) -> list[str]:
         """Return sorted files **not** matching any of the given patterns."""
         if not patterns:
             return sorted(files)
