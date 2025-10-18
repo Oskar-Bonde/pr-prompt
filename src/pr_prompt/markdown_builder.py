@@ -67,16 +67,19 @@ class MarkdownBuilder:
         )
 
     def add_context_files(
-        self, context_patterns: list[str], blacklist_patterns: list[str]
+        self,
+        context_patterns: list[str],
+        blacklist_patterns: list[str],
+        diff_files: dict[str, DiffFile],
     ) -> None:
-        """Add a context files section with a main heading and sub-headings for each file, excluding blacklisted files."""
+        """Add a context files section with a main heading and sub-headings for each file, excluding blacklisted files and files already in the diff."""
         if not context_patterns:
             return
 
         all_files = self.git_client.list_files(self.git_client.head_ref)
-        all_context_files = FileFilter.include(all_files, context_patterns)
-
-        context_files = FileFilter.exclude(all_context_files, blacklist_patterns)
+        context_files = FileFilter.include(all_files, context_patterns)
+        context_files = FileFilter.exclude(context_files, blacklist_patterns)
+        context_files = FileFilter.exclude(context_files, list(diff_files.keys()))
 
         if not context_files:
             return

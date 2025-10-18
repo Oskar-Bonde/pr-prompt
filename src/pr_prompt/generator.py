@@ -184,11 +184,13 @@ class PrPromptGenerator:
             pr_description=pr_description,
         )
 
-        builder.add_context_files(self.context_patterns, self.blacklist_patterns)
-
         diff_index = git.get_diff_index(self.diff_context_lines)
 
         diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+
+        builder.add_context_files(
+            self.context_patterns, self.blacklist_patterns, diff_files
+        )
 
         builder.add_changed_files_tree(diff_files)
 
