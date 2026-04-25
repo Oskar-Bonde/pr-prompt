@@ -127,7 +127,7 @@ class TestGitClientMergeBase:
     """Test merge-base diff behavior in GitClient."""
 
     @patch.object(Repo, "__init__", return_value=None)
-    def test_get_diff_index_uses_merge_base(self, _mock_repo_init: MagicMock) -> None:
+    def test_get_diff_index_uses_merge_base(self, _mock_repo_init: MagicMock) -> None:  # noqa: PT019
         """Test that get_diff_index diffs from the merge-base, not base_commit."""
         client = object.__new__(GitClient)
         client.repo = MagicMock(spec=Repo)
@@ -154,7 +154,8 @@ class TestGitClientMergeBase:
 
     @patch.object(Repo, "__init__", return_value=None)
     def test_get_diff_index_falls_back_without_merge_base(
-        self, _mock_repo_init: MagicMock
+        self,
+        _mock_repo_init: MagicMock,  # noqa: PT019
     ) -> None:
         """Test fallback to base_commit when no merge-base exists."""
         client = object.__new__(GitClient)
@@ -170,7 +171,8 @@ class TestGitClientMergeBase:
 
     @patch.object(Repo, "__init__", return_value=None)
     def test_fetch_base_branch_re_resolves_commit(
-        self, _mock_repo_init: MagicMock
+        self,
+        _mock_repo_init: MagicMock,  # noqa: PT019
     ) -> None:
         """Test that fetch_base_branch updates base_commit after fetching."""
         client = object.__new__(GitClient)
