@@ -31,9 +31,4 @@ def get_markdown_content(file_path: str, content: str) -> str:
         "md": "markdown",
     }
     lang = lang_map.get(extension, "text")
-
-    if lang == "markdown":
-        content = f"~~~{lang}\n{content}\n~~~"
-    else:
-        content = f"```{lang}\n{content}\n```"
-    return content
+    return f"~~~{lang}\n{content}\n~~~"

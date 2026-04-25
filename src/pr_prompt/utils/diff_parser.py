@@ -109,9 +109,9 @@ def get_content_parts(
         content_parts.append(get_markdown_content(diff.a_path, content))
 
     elif diff.diff:
-        content_parts.append("```diff")
+        content_parts.append("~~~diff")
         diff_content = read_diff(diff)
-        content_parts.append(f"{diff_content}```")
+        content_parts.append(f"{diff_content}~~~")
 
     return content_parts
 
