@@ -65,14 +65,32 @@ class GitClient:
             str(item.path) for item in commit.tree.traverse() if isinstance(item, Blob)
         ]
 
+    def is_binary(self, ref: str, file_path: str) -> bool:
+        """Check if a file is binary at a given ref. Symlinks are not binary."""
+        commit = self.repo.commit(ref)
+        blob = commit.tree[file_path]
+        if self.is_symlink(blob):
+            return False
+        chunk: bytes = blob.data_stream.read(8192)
+        return b"\x00" in chunk
+
+    def is_symlink(self, blob: Blob) -> bool:
+        """Check if a blob represents a symlink."""
+        return blob.mode == 0o120000  # noqa: PLR2004
+
     def get_file_content(self, ref: str, file_path: str) -> str:
         commit = self.repo.commit(ref)
         blob = commit.tree[file_path]
+        if self.is_symlink(blob):
+            target = blob.data_stream.read().decode("utf-8").strip()
+            resolved = (Path(file_path).parent / target).as_posix()
+            blob = commit.tree[resolved]
         blob_data: bytes = blob.data_stream.read()
         return blob_data.decode("utf-8", errors="replace").strip()
 
     def get_diff_index(self, context_lines: int = 999999) -> DiffIndex[Diff]:
-        """Get the diff index between the merge-base of base and head commits.
+        """
+        Get the diff index between the merge-base of base and head commits.
 
         Uses the merge-base (common ancestor) to produce a three-dot diff,
         matching GitHub's PR diff behavior. Falls back to a direct diff
