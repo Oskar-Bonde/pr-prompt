@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -68,7 +70,7 @@ class MarkdownBuilder:
 
     def add_context_files(
         self,
-        context_patterns: list[str],
+        context_patterns: list[str] | None,
         blacklist_patterns: list[str],
         diff_files: dict[str, DiffFile],
     ) -> None:
@@ -86,6 +88,8 @@ class MarkdownBuilder:
 
         self.sections.append(MarkdownSection(title="Context Files"))
         for file_path in context_files:
+            if self.git_client.is_binary(self.git_client.head_ref, file_path):
+                continue
             content = self.git_client.get_file_content(
                 self.git_client.head_ref, file_path
             )

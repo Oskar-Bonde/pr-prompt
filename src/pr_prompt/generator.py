@@ -34,14 +34,13 @@ class PrPromptGenerator:
 
     Attributes:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
-            Default: `["*.lock", "package-lock.json", "*.exe",
-                "*.dll","*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]`.
+            Default: `["*.lock", "package-lock.json"]`.
         whitelist_patterns: File patterns to include in diffs. When set, only files
             matching these patterns are included. Applied after blacklist filtering.
             Default: `None` (include all non-blacklisted files).
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
-            Default: `["AGENTS.md"]`.
+            Default: `None`.
         fetch_base: Fetch base ref before generating diff.
             Default: `False`.
         diff_context_lines: Number of context lines around changes in diffs.
@@ -59,21 +58,10 @@ class PrPromptGenerator:
     """
 
     blacklist_patterns: list[str] = field(
-        default_factory=lambda: [
-            "*.lock",
-            "package-lock.json",
-            "*.exe",
-            "*.dll",
-            "*.bin",
-            "*.pyc",
-            "*.whl",
-            "*.jar",
-            "*.svg",
-            "*.png",
-        ]
+        default_factory=lambda: ["*.lock", "package-lock.json"]
     )
     whitelist_patterns: Optional[list[str]] = None
-    context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
+    context_patterns: Optional[list[str]] = None
 
     fetch_base: bool = False
     diff_context_lines: int = 999999
