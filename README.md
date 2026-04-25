@@ -55,6 +55,7 @@ Options:
 - `--base-ref / -b` base branch or commit
 - `--write` save to `.pr_prompt/<type>_<timestamp>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
+- `--whitelist` repeatable pattern to limit diff to matching files only
 - `--context` repeatable pattern inclusion
 - `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`
 
@@ -70,6 +71,7 @@ alias desc='uvx pr-prompt description | xclip -selection clipboard'
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
 - `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock", "package-lock.json", "*.exe", "*.dll", "*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]`
+- `whitelist_patterns` `(list[str] | None)` File patterns to include in diffs. Only matching files are shown. Applied after blacklist filtering. Default: `None` (include all)
 - `context_patterns` `(list[str])` File patterns to include in prompt (after blacklist filtering). Default: `["AGENTS.md"]`
 - `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
@@ -135,6 +137,7 @@ Modified `src/pr_prompt/__init__.py`
 ```toml
 [tool.pr-prompt]
 blacklist_patterns = ["*.lock", "package-lock.json", "*.exe", "*.dll", "*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]
+# whitelist_patterns =
 context_patterns = ["AGENTS.md"]
 fetch_base = false
 diff_context_lines = 999999

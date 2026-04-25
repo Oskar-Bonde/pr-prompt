@@ -36,6 +36,9 @@ class PrPromptGenerator:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
             Default: `["*.lock", "package-lock.json", "*.exe",
                 "*.dll","*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]`.
+        whitelist_patterns: File patterns to include in diffs. When set, only files
+            matching these patterns are included. Applied after blacklist filtering.
+            Default: `None` (include all non-blacklisted files).
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
@@ -69,6 +72,7 @@ class PrPromptGenerator:
             "*.png",
         ]
     )
+    whitelist_patterns: Optional[list[str]] = None
     context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
 
     fetch_base: bool = False
@@ -86,8 +90,10 @@ class PrPromptGenerator:
 
         Args:
             **overrides: Keyword arguments to override TOML config values.
-                Supported keys: blacklist_patterns, context_patterns, fetch_base, diff_context_lines,
-                include_commit_messages, repo_path, remote, default_base_branch, custom_instructions.
+                Supported keys: blacklist_patterns, whitelist_patterns, context_patterns, fetch_base,
+                diff_context_lines, include_commit_messages, repo_path, remote, default_base_branch,
+                custom_instructions.
+
         """
         toml_config = load_toml_config()
 
@@ -200,7 +206,9 @@ class PrPromptGenerator:
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
-        diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+        diff_files = get_diff_files(
+            diff_index, self.blacklist_patterns, self.whitelist_patterns
+        )
 
         builder.add_context_files(
             self.context_patterns, self.blacklist_patterns, diff_files

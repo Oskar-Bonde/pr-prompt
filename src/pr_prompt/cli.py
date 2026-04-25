@@ -31,7 +31,7 @@ class PromptType(str, Enum):
 
 
 @app.command()
-def generate(
+def generate(  # noqa: PLR0913
     prompt_type: Annotated[
         PromptType,
         typer.Argument(
@@ -61,6 +61,13 @@ def generate(
             help="File patterns to exclude from diff and context files. Can be used multiple times.",
         ),
     ] = None,
+    whitelist: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--whitelist",
+            help="File patterns to include in diff. Only matching files are shown. Can be used multiple times.",
+        ),
+    ] = None,
     context: Annotated[
         list[str] | None,
         typer.Option(
@@ -88,7 +95,9 @@ def generate(
     """Generate a pull request prompt."""
     if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
-    overrides = get_overrides(blacklist, context, fetch)
+    overrides = get_overrides(
+        blacklist=blacklist, whitelist=whitelist, context=context, fetch=fetch
+    )
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
@@ -101,13 +110,17 @@ def generate(
 
 
 def get_overrides(
+    *,
     blacklist: list[str] | None,
+    whitelist: list[str] | None = None,
     context: list[str] | None,
-    fetch: bool | None,  # noqa: FBT001
+    fetch: bool | None,
 ) -> dict[str, list[str] | bool]:
     overrides: dict[str, list[str] | bool] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
+    if whitelist is not None:
+        overrides["whitelist_patterns"] = whitelist
     if context is not None:
         overrides["context_patterns"] = context
     if fetch is not None:

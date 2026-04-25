@@ -43,7 +43,9 @@ class DiffFile:
 
 
 def get_diff_files(
-    diffs: DiffIndex[Diff], blacklist_patterns: list[str]
+    diffs: DiffIndex[Diff],
+    blacklist_patterns: list[str],
+    whitelist_patterns: Optional[list[str]] = None,
 ) -> dict[str, DiffFile]:
     """Convert GitPython Diff objects to DiffFile objects."""
     diff_files = {}
@@ -51,6 +53,11 @@ def get_diff_files(
     for diff in diffs:
         file_path = diff.b_path or diff.a_path
         if file_path:
+            if whitelist_patterns and not FileFilter.is_match(
+                file_path, whitelist_patterns
+            ):
+                continue
+
             is_blacklisted = FileFilter.is_match(file_path, blacklist_patterns)
 
             change_type = get_change_type(diff)
