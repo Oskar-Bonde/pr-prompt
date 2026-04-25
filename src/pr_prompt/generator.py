@@ -22,8 +22,7 @@ class PrPromptGenerator:
     Example:
         ```python
         generator = PrPromptGenerator(
-            blacklist_patterns=["*.lock", "*.png"],
-            context_patterns=["AGENTS.md"],
+            blacklist_patterns=["*.lock", "package-lock.json"],
             include_commit_messages=True,
             default_base_branch="origin/main",
         )
