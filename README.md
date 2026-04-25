@@ -69,7 +69,7 @@ alias desc='uvx pr-prompt description | xclip -selection clipboard'
 
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
-- `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock"]`
+- `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock", "package-lock.json", "*.exe", "*.dll", "*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]`
 - `context_patterns` `(list[str])` File patterns to include in prompt (after blacklist filtering). Default: `["AGENTS.md"]`
 - `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
@@ -104,7 +104,7 @@ Arbitrary instructions. Requires:
 - Set `custom_instructions` in constructor/TOML (used when CLI type=custom)
 
 ## 📄 Prompt Example
-~~~markdown
+```markdown
 ## Instructions
 You are a senior software engineer...
 
@@ -123,18 +123,18 @@ M      └── `__init__.py`
 
 ## File diffs
 Modified `src/pr_prompt/__init__.py`
-```diff
+~~~diff
 -__version__ = "0.3.0"
 +__version__ = "0.4.0"
-```
 ~~~
+```
 
 ## ⚙️ Using pyproject.toml / pr_prompt.toml
 
 ### 🔧 Default Configuration
 ```toml
 [tool.pr-prompt]
-blacklist_patterns = ["*.lock"]
+blacklist_patterns = ["*.lock", "package-lock.json", "*.exe", "*.dll", "*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]
 context_patterns = ["AGENTS.md"]
 fetch_base = false
 diff_context_lines = 999999

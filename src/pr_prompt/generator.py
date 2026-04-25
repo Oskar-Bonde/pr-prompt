@@ -22,7 +22,7 @@ class PrPromptGenerator:
     Example:
         ```python
         generator = PrPromptGenerator(
-            blacklist_patterns=["*.lock"],
+            blacklist_patterns=["*.lock", "*.png"],
             context_patterns=["AGENTS.md"],
             include_commit_messages=True,
             default_base_branch="origin/main",
@@ -34,7 +34,8 @@ class PrPromptGenerator:
 
     Attributes:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
-            Default: `["*.lock"]`.
+            Default: `["*.lock", "package-lock.json", "*.exe",
+                "*.dll","*.bin","*.pyc", "*.whl", "*.jar", "*.svg", "*.png"]`.
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `["AGENTS.md"]`.
@@ -54,7 +55,20 @@ class PrPromptGenerator:
             Default: `None`.
     """
 
-    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
+    blacklist_patterns: list[str] = field(
+        default_factory=lambda: [
+            "*.lock",
+            "package-lock.json",
+            "*.exe",
+            "*.dll",
+            "*.bin",
+            "*.pyc",
+            "*.whl",
+            "*.jar",
+            "*.svg",
+            "*.png",
+        ]
+    )
     context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
 
     fetch_base: bool = False
