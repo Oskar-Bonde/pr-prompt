@@ -2,9 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from git import Repo
+
 from pr_prompt.generator import PrPromptGenerator
 from pr_prompt.markdown_builder import MarkdownBuilder
 from pr_prompt.utils import FileFilter, get_diff_files
+from pr_prompt.utils.git_client import GitClient
 
 from .conftest import create_mock_git_client
 
@@ -75,7 +78,7 @@ class TestMarkdownBuilder:
         mock_git = create_mock_git_client(files=["main.py", "example.py"])
 
         builder = MarkdownBuilder(mock_git)
-        builder.add_context_files(["example.py"])
+        builder.add_context_files(["example.py"], [], {})
 
         prompt = builder.build()
         assert "context file content" in prompt
@@ -118,3 +121,71 @@ class TestPrPrompt:
         assert "main.py" in prompt
         assert "File diffs" in prompt
         assert "File diffs" in prompt
+
+
+class TestGitClientMergeBase:
+    """Test merge-base diff behavior in GitClient."""
+
+    @patch.object(Repo, "__init__", return_value=None)
+    def test_get_diff_index_uses_merge_base(self, _mock_repo_init: MagicMock) -> None:
+        """Test that get_diff_index diffs from the merge-base, not base_commit."""
+        client = object.__new__(GitClient)
+        client.repo = MagicMock(spec=Repo)
+
+        merge_base_commit = MagicMock()
+        client.base_commit = MagicMock()
+        client.head_commit = MagicMock()
+        client.repo.merge_base.return_value = [merge_base_commit]
+
+        client.get_diff_index(context_lines=3)
+
+        client.repo.merge_base.assert_called_once_with(
+            client.base_commit, client.head_commit
+        )
+        merge_base_commit.diff.assert_called_once_with(
+            client.head_commit,
+            create_patch=True,
+            unified=3,
+            diff_algorithm="histogram",
+            find_renames=50,
+            function_context=True,
+        )
+        client.base_commit.diff.assert_not_called()
+
+    @patch.object(Repo, "__init__", return_value=None)
+    def test_get_diff_index_falls_back_without_merge_base(
+        self, _mock_repo_init: MagicMock
+    ) -> None:
+        """Test fallback to base_commit when no merge-base exists."""
+        client = object.__new__(GitClient)
+        client.repo = MagicMock(spec=Repo)
+
+        client.base_commit = MagicMock()
+        client.head_commit = MagicMock()
+        client.repo.merge_base.return_value = []
+
+        client.get_diff_index()
+
+        client.base_commit.diff.assert_called_once()
+
+    @patch.object(Repo, "__init__", return_value=None)
+    def test_fetch_base_branch_re_resolves_commit(
+        self, _mock_repo_init: MagicMock
+    ) -> None:
+        """Test that fetch_base_branch updates base_commit after fetching."""
+        client = object.__new__(GitClient)
+        client.repo = MagicMock(spec=Repo)
+        client.remote = MagicMock()
+        client.remote.name = "origin"
+        client.base_ref = "origin/main"
+
+        old_commit = MagicMock()
+        new_commit = MagicMock()
+        client.base_commit = old_commit
+        client.repo.commit.return_value = new_commit
+
+        client.fetch_base_branch()
+
+        client.remote.fetch.assert_called_once_with("main")
+        client.repo.commit.assert_called_once_with("origin/main")
+        assert client.base_commit is new_commit
