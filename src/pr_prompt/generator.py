@@ -22,8 +22,7 @@ class PrPromptGenerator:
     Example:
         ```python
         generator = PrPromptGenerator(
-            blacklist_patterns=["*.lock"],
-            context_patterns=["AGENTS.md"],
+            blacklist_patterns=["*.lock", "package-lock.json"],
             include_commit_messages=True,
             default_base_branch="origin/main",
         )
@@ -34,10 +33,13 @@ class PrPromptGenerator:
 
     Attributes:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
-            Default: `["*.lock"]`.
+            Default: `["*.lock", "package-lock.json"]`.
+        whitelist_patterns: File patterns to include in diffs. When set, only files
+            matching these patterns are included. Applied after blacklist filtering.
+            Default: `None` (include all non-blacklisted files).
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
-            Default: `["AGENTS.md"]`.
+            Default: `None`.
         fetch_base: Fetch base ref before generating diff.
             Default: `False`.
         diff_context_lines: Number of context lines around changes in diffs.
@@ -54,8 +56,11 @@ class PrPromptGenerator:
             Default: `None`.
     """
 
-    blacklist_patterns: list[str] = field(default_factory=lambda: ["*.lock"])
-    context_patterns: list[str] = field(default_factory=lambda: ["AGENTS.md"])
+    blacklist_patterns: list[str] = field(
+        default_factory=lambda: ["*.lock", "package-lock.json"]
+    )
+    whitelist_patterns: Optional[list[str]] = None
+    context_patterns: Optional[list[str]] = None
 
     fetch_base: bool = False
     diff_context_lines: int = 999999
@@ -72,8 +77,10 @@ class PrPromptGenerator:
 
         Args:
             **overrides: Keyword arguments to override TOML config values.
-                Supported keys: blacklist_patterns, context_patterns, fetch_base, diff_context_lines,
-                include_commit_messages, repo_path, remote, default_base_branch, custom_instructions.
+                Supported keys: blacklist_patterns, whitelist_patterns, context_patterns, fetch_base,
+                diff_context_lines, include_commit_messages, repo_path, remote, default_base_branch,
+                custom_instructions.
+
         """
         toml_config = load_toml_config()
 
@@ -186,7 +193,9 @@ class PrPromptGenerator:
 
         diff_index = git.get_diff_index(self.diff_context_lines)
 
-        diff_files = get_diff_files(diff_index, self.blacklist_patterns)
+        diff_files = get_diff_files(
+            diff_index, self.blacklist_patterns, self.whitelist_patterns
+        )
 
         builder.add_context_files(
             self.context_patterns, self.blacklist_patterns, diff_files

@@ -40,10 +40,11 @@ class GitClient:
             raise InferBaseBranchError(msg) from err
 
     def fetch_base_branch(self) -> None:
-        """Fetch the base ref if it's a remote branch."""
+        """Fetch the base ref if it's a remote branch and re-resolve base_commit."""
         if self.base_ref.startswith(f"{self.remote.name}/"):
             ref = self.base_ref.removeprefix(f"{self.remote.name}/")
             self.remote.fetch(ref)
+            self.base_commit = self.repo.commit(self.base_ref)
 
     def get_commit_messages(self) -> list[str]:
         """Get list of commit messages between two refs."""
@@ -64,14 +65,41 @@ class GitClient:
             str(item.path) for item in commit.tree.traverse() if isinstance(item, Blob)
         ]
 
+    def is_binary(self, ref: str, file_path: str) -> bool:
+        """Check if a file is binary at a given ref. Symlinks are not binary."""
+        commit = self.repo.commit(ref)
+        blob = commit.tree[file_path]
+        if self.is_symlink(blob):
+            return False
+        chunk: bytes = blob.data_stream.read(8192)
+        return b"\x00" in chunk
+
+    def is_symlink(self, blob: Blob) -> bool:
+        """Check if a blob represents a symlink."""
+        return blob.mode == 0o120000  # noqa: PLR2004
+
     def get_file_content(self, ref: str, file_path: str) -> str:
         commit = self.repo.commit(ref)
         blob = commit.tree[file_path]
+        if self.is_symlink(blob):
+            target = blob.data_stream.read().decode("utf-8").strip()
+            resolved = (Path(file_path).parent / target).as_posix()
+            blob = commit.tree[resolved]
         blob_data: bytes = blob.data_stream.read()
         return blob_data.decode("utf-8", errors="replace").strip()
 
     def get_diff_index(self, context_lines: int = 999999) -> DiffIndex[Diff]:
-        return self.base_commit.diff(
+        """
+        Get the diff index between the merge-base of base and head commits.
+
+        Uses the merge-base (common ancestor) to produce a three-dot diff,
+        matching GitHub's PR diff behavior. Falls back to a direct diff
+        if no merge-base exists (e.g., unrelated histories).
+        """
+        merge_bases = self.repo.merge_base(self.base_commit, self.head_commit)
+        effective_base = merge_bases[0] if merge_bases else self.base_commit
+
+        return effective_base.diff(
             self.head_commit,
             create_patch=True,
             unified=context_lines,

@@ -55,6 +55,7 @@ Options:
 - `--base-ref / -b` base branch or commit
 - `--write` save to `.pr_prompt/<type>_<timestamp>.md` instead of stdout
 - `--blacklist` repeatable pattern exclusion
+- `--whitelist` repeatable pattern to limit diff to matching files only
 - `--context` repeatable pattern inclusion
 - `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`
 
@@ -69,8 +70,9 @@ alias desc='uvx pr-prompt description | xclip -selection clipboard'
 
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
-- `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock"]`
-- `context_patterns` `(list[str])` File patterns to include in prompt (after blacklist filtering). Default: `["AGENTS.md"]`
+- `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock", "package-lock.json"]`. Note: binary files are automatically detected and excluded.
+- `whitelist_patterns` `(list[str] | None)` File patterns to include in diffs. Only matching files are shown. Applied after blacklist filtering. Default: `None` (include all)
+- `context_patterns` `(list[str] | None)` File patterns to include in prompt (after blacklist filtering). Default: `None`
 - `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
 - `include_commit_messages` `(bool)` Include commit messages in prompt. Default: `True`
@@ -104,7 +106,7 @@ Arbitrary instructions. Requires:
 - Set `custom_instructions` in constructor/TOML (used when CLI type=custom)
 
 ## 📄 Prompt Example
-~~~markdown
+```markdown
 ## Instructions
 You are a senior software engineer...
 
@@ -123,19 +125,20 @@ M      └── `__init__.py`
 
 ## File diffs
 Modified `src/pr_prompt/__init__.py`
-```diff
+~~~diff
 -__version__ = "0.3.0"
 +__version__ = "0.4.0"
-```
 ~~~
+```
 
 ## ⚙️ Using pyproject.toml / pr_prompt.toml
 
 ### 🔧 Default Configuration
 ```toml
 [tool.pr-prompt]
-blacklist_patterns = ["*.lock"]
-context_patterns = ["AGENTS.md"]
+blacklist_patterns = ["*.lock", "package-lock.json"]
+# whitelist_patterns =
+# context_patterns =
 fetch_base = false
 diff_context_lines = 999999
 include_commit_messages = true

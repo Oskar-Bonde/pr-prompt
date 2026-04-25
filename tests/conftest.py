@@ -36,6 +36,9 @@ def create_mock_git_client(
     mock_git.get_commit_messages.return_value = commit_messages
     mock_git.fetch_base_branch.return_value = None
     mock_git.get_file_content.return_value = "context file content"
+    mock_git.is_binary.return_value = False
+    mock_git.repo = MagicMock()
+    mock_git.repo.merge_base.return_value = [MagicMock()]
 
     # Create mock diff index with proper structure
     mock_diffs = []

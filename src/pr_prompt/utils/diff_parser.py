@@ -43,7 +43,9 @@ class DiffFile:
 
 
 def get_diff_files(
-    diffs: DiffIndex[Diff], blacklist_patterns: list[str]
+    diffs: DiffIndex[Diff],
+    blacklist_patterns: list[str],
+    whitelist_patterns: Optional[list[str]] = None,
 ) -> dict[str, DiffFile]:
     """Convert GitPython Diff objects to DiffFile objects."""
     diff_files = {}
@@ -51,6 +53,11 @@ def get_diff_files(
     for diff in diffs:
         file_path = diff.b_path or diff.a_path
         if file_path:
+            if whitelist_patterns and not FileFilter.is_match(
+                file_path, whitelist_patterns
+            ):
+                continue
+
             is_blacklisted = FileFilter.is_match(file_path, blacklist_patterns)
 
             change_type = get_change_type(diff)
@@ -100,6 +107,10 @@ def get_content_parts(
         content_parts.append("[Diff ignored]")
         return content_parts
 
+    if _is_binary_diff(diff):
+        content_parts.append("[Binary file]")
+        return content_parts
+
     if change_type == ChangeType.ADDED and diff.b_blob and diff.b_path:
         content = read_blob(diff.b_blob)
         content_parts.append(get_markdown_content(diff.b_path, content))
@@ -109,9 +120,9 @@ def get_content_parts(
         content_parts.append(get_markdown_content(diff.a_path, content))
 
     elif diff.diff:
-        content_parts.append("```diff")
+        content_parts.append("~~~diff")
         diff_content = read_diff(diff)
-        content_parts.append(f"{diff_content}```")
+        content_parts.append(f"{diff_content}~~~")
 
     return content_parts
 
@@ -134,3 +145,13 @@ def read_diff(diff: Diff) -> str:
         if isinstance(diff.diff, bytes)
         else diff.diff
     )
+
+
+def _is_binary_diff(diff: Diff) -> bool:
+    """Check if a diff involves binary files by inspecting blob content for null bytes."""
+    for blob in (diff.a_blob, diff.b_blob):
+        if blob is not None:
+            chunk: bytes = blob.data_stream.read(8192)
+            if b"\x00" in chunk:
+                return True
+    return False
