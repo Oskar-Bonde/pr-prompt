@@ -192,7 +192,7 @@ class PrPromptGenerator:
         builder.add_context_files(
             self.context_patterns, self.blacklist_patterns, diff_files
         )
-        builder.add_changed_files_tree(diff_files)
+        builder.add_changed_files(diff_files)
 
         return builder.build()
 
@@ -272,7 +272,7 @@ class PrPromptGenerator:
             self.context_patterns, self.blacklist_patterns, diff_files
         )
 
-        builder.add_changed_files_tree(diff_files)
+        builder.add_changed_files(diff_files)
 
         builder.add_file_diffs(diff_files)
 

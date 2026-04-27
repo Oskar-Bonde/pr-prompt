@@ -121,9 +121,7 @@ Commits: Bumped minor
 File: `README.md`...
 
 ## Changed Files
-   `src`/
-   └── `pr_prompt`/
-M      └── `__init__.py`
+M src/pr_prompt/__init__.py
 
 ## File diffs
 Modified `src/pr_prompt/__init__.py`

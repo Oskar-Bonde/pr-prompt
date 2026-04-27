@@ -65,7 +65,7 @@ class TestMarkdownBuilder:
 
         diff_index = mock_git.get_diff_index()
         diff_files = get_diff_files(diff_index, [])
-        builder.add_changed_files_tree(diff_files)
+        builder.add_changed_files(diff_files)
 
         prompt = builder.build()
         assert "main.py" in prompt
