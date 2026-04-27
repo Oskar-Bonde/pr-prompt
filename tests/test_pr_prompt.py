@@ -191,3 +191,118 @@ class TestGitClientMergeBase:
         client.remote.fetch.assert_called_once_with("main")
         client.repo.commit.assert_called_once_with("origin/main")
         assert client.base_commit is new_commit
+
+
+class TestGenerateOverview:
+    """Test generate_overview method."""
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_overview_contains_metadata_and_tree(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that overview includes metadata and changed file tree."""
+        files = ["src/main.py", "src/utils.py", "README.md"]
+        mock_git = create_mock_git_client(
+            base_ref="origin/main",
+            head_ref="feature/test",
+            files=files,
+            commit_messages=["Add feature"],
+        )
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_overview(base_ref="origin/main")
+
+        assert "Pull Request Details" in prompt
+        assert "Changed Files" in prompt
+        assert "Add feature" in prompt
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_overview_excludes_instructions_and_diffs(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that overview does not include instructions or file diffs."""
+        mock_git = create_mock_git_client(files=["main.py"])
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_overview()
+
+        assert "Instructions" not in prompt
+        assert "File diffs" not in prompt
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_overview_includes_context_files(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that overview includes context files when patterns are set."""
+        mock_git = create_mock_git_client(files=["main.py"])
+        mock_git.list_files.return_value = ["main.py", "docs.md"]
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator(context_patterns=["*.md"])
+        prompt = generator.generate_overview()
+
+        assert "Context Files" in prompt
+
+
+class TestGenerateDiff:
+    """Test generate_diff method."""
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_diff_returns_matching_files(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that diff returns only files matching the patterns."""
+        files = ["src/main.py", "src/utils.py", "README.md"]
+        mock_git = create_mock_git_client(files=files)
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_diff(["src/*.py"])
+
+        assert "main.py" in prompt
+        assert "utils.py" in prompt
+        assert "README.md" not in prompt
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_diff_multiple_patterns(self, mock_git_client_class: MagicMock) -> None:
+        """Test that diff matches multiple glob patterns."""
+        files = ["src/main.py", "README.md", "tests/test_main.py"]
+        mock_git = create_mock_git_client(files=files)
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_diff(["*.md", "tests/*.py"])
+
+        assert "README.md" in prompt
+        assert "test_main.py" in prompt
+        assert "src/main.py" not in prompt
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_diff_no_matches_returns_only_header(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that diff returns only the heading when no files match."""
+        mock_git = create_mock_git_client(files=["main.py"])
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_diff(["*.rs"])
+
+        assert prompt == "## File diffs"
+
+    @patch("pr_prompt.generator.GitClient")
+    def test_diff_excludes_metadata_and_instructions(
+        self, mock_git_client_class: MagicMock
+    ) -> None:
+        """Test that diff output has no metadata or instructions."""
+        mock_git = create_mock_git_client(files=["main.py"])
+        mock_git_client_class.return_value = mock_git
+
+        generator = PrPromptGenerator()
+        prompt = generator.generate_diff(["*.py"])
+
+        assert "Pull Request Details" not in prompt
+        assert "Instructions" not in prompt
+        assert "Changed Files" not in prompt
