@@ -34,9 +34,6 @@ class PrPromptGenerator:
     Attributes:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
             Default: `["*.lock", "package-lock.json"]`.
-        whitelist_patterns: File patterns to include in diffs. When set, only files
-            matching these patterns are included. Applied after blacklist filtering.
-            Default: `None` (include all non-blacklisted files).
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `None`.
@@ -59,7 +56,6 @@ class PrPromptGenerator:
     blacklist_patterns: list[str] = field(
         default_factory=lambda: ["*.lock", "package-lock.json"]
     )
-    whitelist_patterns: Optional[list[str]] = None
     context_patterns: Optional[list[str]] = None
 
     fetch_base: bool = False
@@ -77,7 +73,7 @@ class PrPromptGenerator:
 
         Args:
             **overrides: Keyword arguments to override TOML config values.
-                Supported keys: blacklist_patterns, whitelist_patterns, context_patterns, fetch_base,
+                Supported keys: blacklist_patterns, context_patterns, fetch_base,
                 diff_context_lines, include_commit_messages, repo_path, remote, default_base_branch,
                 custom_instructions.
 
@@ -241,11 +237,9 @@ class PrPromptGenerator:
         self,
         git: GitClient,
     ) -> dict[str, DiffFile]:
-        """Get diff files filtered by blacklist and whitelist patterns."""
+        """Get diff files filtered by blacklist patterns."""
         diff_index = git.get_diff_index(self.diff_context_lines)
-        return get_diff_files(
-            diff_index, self.blacklist_patterns, self.whitelist_patterns
-        )
+        return get_diff_files(diff_index, self.blacklist_patterns)
 
     def _generate(
         self,

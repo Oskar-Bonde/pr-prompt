@@ -73,7 +73,6 @@ alias desc='uvx pr-prompt generate description | xclip -selection clipboard'
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
 - `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock", "package-lock.json"]`. Note: binary files are automatically detected and excluded.
-- `whitelist_patterns` `(list[str] | None)` File patterns to include in diffs. Only matching files are shown. Applied after blacklist filtering. Default: `None` (include all)
 - `context_patterns` `(list[str] | None)` File patterns to include in prompt (after blacklist filtering). Default: `None`
 - `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
@@ -137,7 +136,6 @@ Modified `src/pr_prompt/__init__.py`
 ```toml
 [tool.pr-prompt]
 blacklist_patterns = ["*.lock", "package-lock.json"]
-# whitelist_patterns =
 # context_patterns =
 fetch_base = false
 diff_context_lines = 999999

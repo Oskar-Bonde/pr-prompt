@@ -31,7 +31,8 @@ class PromptType(str, Enum):
 
 
 @app.command()
-def generate(  # noqa: PLR0913
+def generate(
+    *,
     prompt_type: Annotated[
         PromptType,
         typer.Argument(
@@ -47,7 +48,7 @@ def generate(  # noqa: PLR0913
             help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
         ),
     ] = None,
-    write: Annotated[  # noqa: FBT002
+    write: Annotated[
         bool,
         typer.Option(
             "--write",
@@ -59,13 +60,6 @@ def generate(  # noqa: PLR0913
         typer.Option(
             "--blacklist",
             help="File patterns to exclude from diff and context files. Can be used multiple times.",
-        ),
-    ] = None,
-    whitelist: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--whitelist",
-            help="File patterns to include in diff. Only matching files are shown. Can be used multiple times.",
         ),
     ] = None,
     context: Annotated[
@@ -83,7 +77,7 @@ def generate(  # noqa: PLR0913
             show_default=False,
         ),
     ] = None,
-    version: Annotated[  # noqa: ARG001, FBT002
+    version: Annotated[  # noqa: ARG001
         bool,
         typer.Option(
             "--version",
@@ -95,9 +89,7 @@ def generate(  # noqa: PLR0913
     """Generate a full pull request prompt (instructions + metadata + context + tree + diffs)."""
     if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
-    overrides = _get_overrides(
-        blacklist=blacklist, whitelist=whitelist, context=context, fetch=fetch
-    )
+    overrides = _get_overrides(blacklist=blacklist, context=context, fetch=fetch)
     generator = PrPromptGenerator.from_toml(**overrides)
     generator_method = _get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
@@ -107,6 +99,7 @@ def generate(  # noqa: PLR0913
 
 @app.command()
 def overview(
+    *,
     base_ref: Annotated[
         str | None,
         typer.Option(
@@ -115,7 +108,7 @@ def overview(
             help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
         ),
     ] = None,
-    write: Annotated[  # noqa: FBT002
+    write: Annotated[
         bool,
         typer.Option(
             "--write",
@@ -127,13 +120,6 @@ def overview(
         typer.Option(
             "--blacklist",
             help="File patterns to exclude from diff and context files. Can be used multiple times.",
-        ),
-    ] = None,
-    whitelist: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--whitelist",
-            help="File patterns to include in diff. Only matching files are shown. Can be used multiple times.",
         ),
     ] = None,
     context: Annotated[
@@ -153,9 +139,7 @@ def overview(
     ] = None,
 ) -> None:
     """Generate PR metadata, context files, and changed file tree (no instructions or diffs)."""
-    overrides = _get_overrides(
-        blacklist=blacklist, whitelist=whitelist, context=context, fetch=fetch
-    )
+    overrides = _get_overrides(blacklist=blacklist, context=context, fetch=fetch)
     generator = PrPromptGenerator.from_toml(**overrides)
     prompt = generator.generate_overview(base_ref)
 
@@ -164,6 +148,7 @@ def overview(
 
 @app.command()
 def diff(
+    *,
     file_patterns: Annotated[
         list[str],
         typer.Argument(
@@ -178,7 +163,7 @@ def diff(
             help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
         ),
     ] = None,
-    write: Annotated[  # noqa: FBT002
+    write: Annotated[
         bool,
         typer.Option(
             "--write",
@@ -212,15 +197,12 @@ def diff(
 def _get_overrides(
     *,
     blacklist: list[str] | None,
-    whitelist: list[str] | None = None,
     context: list[str] | None,
     fetch: bool | None,
 ) -> dict[str, list[str] | bool]:
     overrides: dict[str, list[str] | bool] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
-    if whitelist is not None:
-        overrides["whitelist_patterns"] = whitelist
     if context is not None:
         overrides["context_patterns"] = context
     if fetch is not None:
