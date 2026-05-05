@@ -7,7 +7,7 @@ from typing import Optional
 
 from .instructions import DESCRIPTION_INSTRUCTIONS, REVIEW_INSTRUCTIONS
 from .markdown_builder import MarkdownBuilder
-from .utils import GitClient, get_diff_files
+from .utils import DiffFile, FileFilter, GitClient, get_diff_files
 from .utils.config import load_toml_config
 from .utils.errors import MissingCustomInstructionsError
 
@@ -34,9 +34,6 @@ class PrPromptGenerator:
     Attributes:
         blacklist_patterns: File patterns to exclude from diffs and context file inclusion.
             Default: `["*.lock", "package-lock.json"]`.
-        whitelist_patterns: File patterns to include in diffs. When set, only files
-            matching these patterns are included. Applied after blacklist filtering.
-            Default: `None` (include all non-blacklisted files).
         context_patterns: File patterns to include in prompt (after blacklist filtering).
             Used for including documentation that provides context.
             Default: `None`.
@@ -59,7 +56,6 @@ class PrPromptGenerator:
     blacklist_patterns: list[str] = field(
         default_factory=lambda: ["*.lock", "package-lock.json"]
     )
-    whitelist_patterns: Optional[list[str]] = None
     context_patterns: Optional[list[str]] = None
 
     fetch_base: bool = False
@@ -77,7 +73,7 @@ class PrPromptGenerator:
 
         Args:
             **overrides: Keyword arguments to override TOML config values.
-                Supported keys: blacklist_patterns, whitelist_patterns, context_patterns, fetch_base,
+                Supported keys: blacklist_patterns, context_patterns, fetch_base,
                 diff_context_lines, include_commit_messages, repo_path, remote, default_base_branch,
                 custom_instructions.
 
@@ -166,6 +162,85 @@ class PrPromptGenerator:
             pr_description=pr_description,
         )
 
+    def generate_overview(
+        self,
+        base_ref: Optional[str] = None,
+        head_ref: Optional[str] = None,
+        *,
+        pr_description: Optional[str] = None,
+    ) -> str:
+        """
+        Generate PR metadata, context files, and changed file tree (no instructions or diffs).
+
+        Args:
+            base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
+            head_ref: The branch/commit with changes. Default: current branch.
+            pr_description: The description of the pull request.
+        """
+        git = self._create_git_client(base_ref or self.default_base_branch, head_ref)
+        diff_files = self._get_filtered_diff_files(git)
+
+        builder = MarkdownBuilder(git)
+        builder.add_metadata(
+            include_commit_messages=self.include_commit_messages,
+            pr_description=pr_description,
+        )
+        builder.add_context_files(
+            self.context_patterns, self.blacklist_patterns, diff_files
+        )
+        builder.add_changed_files(diff_files)
+
+        return builder.build()
+
+    def generate_diff(
+        self,
+        file_patterns: list[str],
+        base_ref: Optional[str] = None,
+        head_ref: Optional[str] = None,
+    ) -> str:
+        """
+        Generate file diffs for changed files matching the given glob patterns.
+
+        Args:
+            file_patterns: Glob patterns to match against changed file paths.
+            base_ref: The base branch/commit to compare against. If None, uses default_base_branch.
+            head_ref: The branch/commit with changes. Default: current branch.
+        """
+        git = self._create_git_client(base_ref or self.default_base_branch, head_ref)
+        diff_files = self._get_filtered_diff_files(git)
+
+        filtered = {
+            path: diff_file
+            for path, diff_file in diff_files.items()
+            if FileFilter.is_match(path, file_patterns)
+        }
+
+        builder = MarkdownBuilder(git)
+        builder.add_file_diffs(filtered)
+
+        return builder.build()
+
+    def _create_git_client(
+        self,
+        base_ref: Optional[str] = None,
+        head_ref: Optional[str] = None,
+    ) -> GitClient:
+        """Create a GitClient and optionally fetch the base branch."""
+        git = GitClient(
+            base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
+        )
+        if self.fetch_base:
+            git.fetch_base_branch()
+        return git
+
+    def _get_filtered_diff_files(
+        self,
+        git: GitClient,
+    ) -> dict[str, DiffFile]:
+        """Get diff files filtered by blacklist patterns."""
+        diff_index = git.get_diff_index(self.diff_context_lines)
+        return get_diff_files(diff_index, self.blacklist_patterns)
+
     def _generate(
         self,
         instructions: str,
@@ -175,12 +250,8 @@ class PrPromptGenerator:
         pr_description: Optional[str] = None,
     ) -> str:
         """Generate a pull request prompt."""
-        git = GitClient(
-            base_ref, head_ref, repo_path=self.repo_path, remote=self.remote
-        )
-
-        if self.fetch_base:
-            git.fetch_base_branch()
+        git = self._create_git_client(base_ref, head_ref)
+        diff_files = self._get_filtered_diff_files(git)
 
         builder = MarkdownBuilder(git)
 
@@ -191,17 +262,11 @@ class PrPromptGenerator:
             pr_description=pr_description,
         )
 
-        diff_index = git.get_diff_index(self.diff_context_lines)
-
-        diff_files = get_diff_files(
-            diff_index, self.blacklist_patterns, self.whitelist_patterns
-        )
-
         builder.add_context_files(
             self.context_patterns, self.blacklist_patterns, diff_files
         )
 
-        builder.add_changed_files_tree(diff_files)
+        builder.add_changed_files(diff_files)
 
         builder.add_file_diffs(diff_files)
 

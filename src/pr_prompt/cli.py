@@ -31,7 +31,8 @@ class PromptType(str, Enum):
 
 
 @app.command()
-def generate(  # noqa: PLR0913
+def generate(
+    *,
     prompt_type: Annotated[
         PromptType,
         typer.Argument(
@@ -47,7 +48,7 @@ def generate(  # noqa: PLR0913
             help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
         ),
     ] = None,
-    write: Annotated[  # noqa: FBT002
+    write: Annotated[
         bool,
         typer.Option(
             "--write",
@@ -59,13 +60,6 @@ def generate(  # noqa: PLR0913
         typer.Option(
             "--blacklist",
             help="File patterns to exclude from diff and context files. Can be used multiple times.",
-        ),
-    ] = None,
-    whitelist: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--whitelist",
-            help="File patterns to include in diff. Only matching files are shown. Can be used multiple times.",
         ),
     ] = None,
     context: Annotated[
@@ -83,7 +77,7 @@ def generate(  # noqa: PLR0913
             show_default=False,
         ),
     ] = None,
-    version: Annotated[  # noqa: ARG001, FBT002
+    version: Annotated[  # noqa: ARG001
         bool,
         typer.Option(
             "--version",
@@ -92,43 +86,143 @@ def generate(  # noqa: PLR0913
         ),
     ] = False,
 ) -> None:
-    """Generate a pull request prompt."""
+    """Generate a full pull request prompt (instructions + metadata + context + tree + diffs)."""
     if write:
         console.print(f"Generating pr {prompt_type.value} prompt...", style="dim")
-    overrides = get_overrides(
-        blacklist=blacklist, whitelist=whitelist, context=context, fetch=fetch
-    )
+    overrides = _get_overrides(blacklist=blacklist, context=context, fetch=fetch)
     generator = PrPromptGenerator.from_toml(**overrides)
-    generator_method = get_generator_method(generator, prompt_type)
+    generator_method = _get_generator_method(generator, prompt_type)
     prompt = generator_method(base_ref)
 
-    if not write:
-        print(prompt)  # noqa: T201
-
-    else:
-        write_prompt_to_file(prompt_type, prompt)
+    _output(prompt, write=write, label=prompt_type.value)
 
 
-def get_overrides(
+@app.command()
+def overview(
+    *,
+    base_ref: Annotated[
+        str | None,
+        typer.Option(
+            "--base-ref",
+            "-b",
+            help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
+        ),
+    ] = None,
+    write: Annotated[
+        bool,
+        typer.Option(
+            "--write",
+            help="Write to .pr_prompt/overview_<timestamp>.md instead of stdout.",
+        ),
+    ] = False,
+    blacklist: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--blacklist",
+            help="File patterns to exclude from diff and context files. Can be used multiple times.",
+        ),
+    ] = None,
+    context: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--context",
+            help="File patterns to include in prompt. Can be used multiple times.",
+        ),
+    ] = None,
+    fetch: Annotated[
+        bool | None,
+        typer.Option(
+            "--fetch/--no-fetch",
+            help="Fetch the base ref before generating diffs. Default: False.",
+            show_default=False,
+        ),
+    ] = None,
+) -> None:
+    """Generate PR metadata, context files, and changed file tree (no instructions or diffs)."""
+    overrides = _get_overrides(blacklist=blacklist, context=context, fetch=fetch)
+    generator = PrPromptGenerator.from_toml(**overrides)
+    prompt = generator.generate_overview(base_ref)
+
+    _output(prompt, write=write, label="overview")
+
+
+@app.command()
+def diff(
+    *,
+    file_patterns: Annotated[
+        list[str],
+        typer.Argument(
+            help="Glob patterns to match against changed file paths (e.g., 'src/*.py' '*.md').",
+        ),
+    ],
+    context_lines: Annotated[
+        int | None,
+        typer.Option(
+            "--context-lines",
+            help="Number of context lines around changes in diffs. Default: 999999 (full file).",
+        ),
+    ] = None,
+    base_ref: Annotated[
+        str | None,
+        typer.Option(
+            "--base-ref",
+            "-b",
+            help="The branch/commit to compare against (e.g., 'origin/main'). Infer from default branch if not provided.",
+        ),
+    ] = None,
+    write: Annotated[
+        bool,
+        typer.Option(
+            "--write",
+            help="Write to .pr_prompt/diff_<timestamp>.md instead of stdout.",
+        ),
+    ] = False,
+    blacklist: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--blacklist",
+            help="File patterns to exclude from diff. Can be used multiple times.",
+        ),
+    ] = None,
+    fetch: Annotated[
+        bool | None,
+        typer.Option(
+            "--fetch/--no-fetch",
+            help="Fetch the base ref before generating diffs. Default: False.",
+            show_default=False,
+        ),
+    ] = None,
+) -> None:
+    """Generate file diffs for changed files matching the given glob patterns."""
+    overrides = _get_overrides(
+        blacklist=blacklist, context=None, fetch=fetch, diff_context_lines=context_lines
+    )
+    generator = PrPromptGenerator.from_toml(**overrides)
+    prompt = generator.generate_diff(file_patterns, base_ref)
+
+    _output(prompt, write=write, label="diff")
+
+
+def _get_overrides(
     *,
     blacklist: list[str] | None,
-    whitelist: list[str] | None = None,
     context: list[str] | None,
     fetch: bool | None,
-) -> dict[str, list[str] | bool]:
-    overrides: dict[str, list[str] | bool] = {}
+    diff_context_lines: int | None = None,
+) -> dict[str, list[str] | bool | int]:
+    overrides: dict[str, list[str] | bool | int] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
-    if whitelist is not None:
-        overrides["whitelist_patterns"] = whitelist
     if context is not None:
         overrides["context_patterns"] = context
     if fetch is not None:
         overrides["fetch_base"] = fetch
+    if diff_context_lines is not None:
+        overrides["diff_context_lines"] = diff_context_lines
     return overrides
 
 
-def get_generator_method(
+def _get_generator_method(
     generator: PrPromptGenerator,
     prompt_type: PromptType,
 ) -> Callable[[str | None], str]:
@@ -139,17 +233,22 @@ def get_generator_method(
     return generator.generate_custom
 
 
-def write_prompt_to_file(prompt_type: PromptType, prompt: str) -> None:
+def _output(prompt: str, *, write: bool, label: str) -> None:
+    if not write:
+        print(prompt)  # noqa: T201
+    else:
+        _write_prompt_to_file(label, prompt)
+
+
+def _write_prompt_to_file(label: str, prompt: str) -> None:
     output_dir = Path(".pr_prompt")
     output_dir.mkdir(exist_ok=True)
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
         "%Y-%m-%d_%H-%M-%S"
     )
-    output_path = output_dir / f"{prompt_type.value}_{timestamp}.md"
+    output_path = output_dir / f"{label}_{timestamp}.md"
     output_path.write_text(prompt, encoding="utf-8")
-    console.print(
-        f"✅ Wrote pr {prompt_type.value} prompt to '{output_path}'", style="green"
-    )
+    console.print(f"✅ Wrote pr {label} prompt to '{output_path}'", style="green")
     console.print(f"File size: {len(prompt):,} characters", style="blue")
 
 

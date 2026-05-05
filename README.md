@@ -9,6 +9,8 @@ Generate pull request prompts (review, description, or custom) from git diffs, c
 - **Diff**: Display differences between the current and base branches.
 - **Context Patterns**: Include matched files in the prompt for additional context.
 - **Blacklist Patterns**: Exclude noisy files (e.g., `*.lock`).
+- **Overview**: Get PR metadata, context files, and changed file tree without diffs.
+- **File Diff**: Get diffs for specific files using glob patterns.
 
 ### 🛠️ Usage & Integration
 - **Python API**: Usable as a library in your own tools.
@@ -39,31 +41,31 @@ print(prompt)
 
 ### 🖥️ CLI Usage
 ```bash
-# Review prompt (default type) to stdout
-pr-prompt
+# Full review prompt (default type) to stdout
+pr-prompt generate
 
-# Description prompt to stdout
-pr-prompt description
+# Full description prompt to stdout
+pr-prompt generate description
 
 # Custom prompt (requires custom_instructions in TOML config)
-pr-prompt custom
+pr-prompt generate custom
 
 # Copy review prompt to clipboard
-pr-prompt review | xclip -selection clipboard
+pr-prompt generate review | xclip -selection clipboard
+
+# PR overview: metadata + context files + changed file tree (no diffs)
+pr-prompt overview
+
+# File diffs for specific glob patterns
+pr-prompt diff 'src/*.py'
+pr-prompt diff '*.py' '*.md' --context-lines 3
 ```
-Options:
-- `--base-ref / -b` base branch or commit
-- `--write` save to `.pr_prompt/<type>_<timestamp>.md` instead of stdout
-- `--blacklist` repeatable pattern exclusion
-- `--whitelist` repeatable pattern to limit diff to matching files only
-- `--context` repeatable pattern inclusion
-- `--fetch / --no-fetch` fetch the base ref before diff. Default: `False`
 
 ### 🔗 Shell Aliases
 Add to your shell config (e.g., `~/.bashrc` or `~/.zshrc`):
 ```bash
-alias review='uvx pr-prompt review | xclip -selection clipboard'
-alias desc='uvx pr-prompt description | xclip -selection clipboard'
+alias review='uvx pr-prompt generate review | xclip -selection clipboard'
+alias desc='uvx pr-prompt generate description | xclip -selection clipboard'
 ```
 
 ## ⚙️ Configuration
@@ -71,7 +73,6 @@ alias desc='uvx pr-prompt description | xclip -selection clipboard'
 ### 🔧 Parameters Reference
 PrPromptGenerator / CLI / TOML shared parameters:
 - `blacklist_patterns` `(list[str])` File patterns to exclude from diffs and context file inclusion. Default: `["*.lock", "package-lock.json"]`. Note: binary files are automatically detected and excluded.
-- `whitelist_patterns` `(list[str] | None)` File patterns to include in diffs. Only matching files are shown. Applied after blacklist filtering. Default: `None` (include all)
 - `context_patterns` `(list[str] | None)` File patterns to include in prompt (after blacklist filtering). Default: `None`
 - `fetch_base` `(bool)` Fetch base ref before generating diff. Default: `False`
 - `diff_context_lines` `(int)` Number of context lines around changes in diffs. Default: `999999`
@@ -119,9 +120,7 @@ Commits: Bumped minor
 File: `README.md`...
 
 ## Changed Files
-   `src`/
-   └── `pr_prompt`/
-M      └── `__init__.py`
+M src/pr_prompt/__init__.py
 
 ## File diffs
 Modified `src/pr_prompt/__init__.py`
@@ -137,7 +136,6 @@ Modified `src/pr_prompt/__init__.py`
 ```toml
 [tool.pr-prompt]
 blacklist_patterns = ["*.lock", "package-lock.json"]
-# whitelist_patterns =
 # context_patterns =
 fetch_base = false
 diff_context_lines = 999999

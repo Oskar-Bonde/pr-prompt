@@ -45,24 +45,25 @@ class DiffFile:
 def get_diff_files(
     diffs: DiffIndex[Diff],
     blacklist_patterns: list[str],
-    whitelist_patterns: Optional[list[str]] = None,
 ) -> dict[str, DiffFile]:
-    """Convert GitPython Diff objects to DiffFile objects."""
+    """
+    Convert GitPython Diff objects to DiffFile objects.
+
+    All changed files are included. Files matching blacklist patterns have
+    their diff content replaced with '[Diff ignored]'.
+    """
     diff_files = {}
 
     for diff in diffs:
         file_path = diff.b_path or diff.a_path
         if file_path:
-            if whitelist_patterns and not FileFilter.is_match(
-                file_path, whitelist_patterns
-            ):
-                continue
-
             is_blacklisted = FileFilter.is_match(file_path, blacklist_patterns)
 
             change_type = get_change_type(diff)
             content_parts = get_content_parts(
-                diff, change_type, is_blacklisted=is_blacklisted
+                diff,
+                change_type,
+                is_diff_ignored=is_blacklisted,
             )
             content = "\n".join(content_parts)
 
@@ -90,9 +91,14 @@ def get_change_type(diff: Diff) -> ChangeType:
 
 
 def get_content_parts(
-    diff: Diff, change_type: ChangeType, *, is_blacklisted: bool
+    diff: Diff, change_type: ChangeType, *, is_diff_ignored: bool
 ) -> list[str]:
-    """Get raw content from diff object."""
+    """
+    Get raw content from diff object.
+
+    When is_diff_ignored is True (file is blacklisted), the diff content is
+    replaced with '[Diff ignored]'.
+    """
     content_parts = []
 
     if diff.renamed_file and diff.rename_from and diff.rename_to:
@@ -103,7 +109,7 @@ def get_content_parts(
     if change_type == ChangeType.RENAMED:
         return content_parts
 
-    if is_blacklisted:
+    if is_diff_ignored:
         content_parts.append("[Diff ignored]")
         return content_parts
 

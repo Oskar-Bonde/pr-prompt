@@ -7,7 +7,7 @@ from .utils import (
     DiffFile,
     FileFilter,
     GitClient,
-    build_file_tree,
+    get_changed_files,
     get_markdown_content,
 )
 
@@ -102,21 +102,22 @@ class MarkdownBuilder:
                 )
             )
 
-    def add_changed_files_tree(self, diff_files: dict[str, DiffFile]) -> None:
-        """Add changed files in a tree format."""
-        file_tree = build_file_tree(diff_files)
+    def add_changed_files(self, diff_files: dict[str, DiffFile]) -> None:
+        """Add changed files as a flat list."""
+        file_list = get_changed_files(diff_files)
 
         self.sections.append(
             MarkdownSection(
                 title="Changed Files",
-                content=f"```\n{file_tree}\n```",
+                content=f"```\n{file_list}\n```",
             )
         )
 
     def add_file_diffs(self, file_diffs: dict[str, DiffFile]) -> None:
         """Add file diffs with individual headings for each file."""
+        if not file_diffs:
+            return
         self.sections.append(MarkdownSection(title="File diffs"))
-
         for file_path, diff_file in file_diffs.items():
             self.sections.append(
                 MarkdownSection(
