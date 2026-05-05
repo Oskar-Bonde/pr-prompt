@@ -58,7 +58,7 @@ pr-prompt overview
 
 # File diffs for specific glob patterns
 pr-prompt diff 'src/*.py'
-pr-prompt diff '*.py' '*.md'
+pr-prompt diff '*.py' '*.md' --context-lines 3
 ```
 
 ### 🔗 Shell Aliases

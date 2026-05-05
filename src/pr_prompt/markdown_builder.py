@@ -115,8 +115,9 @@ class MarkdownBuilder:
 
     def add_file_diffs(self, file_diffs: dict[str, DiffFile]) -> None:
         """Add file diffs with individual headings for each file."""
+        if not file_diffs:
+            return
         self.sections.append(MarkdownSection(title="File diffs"))
-
         for file_path, diff_file in file_diffs.items():
             self.sections.append(
                 MarkdownSection(
