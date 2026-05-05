@@ -74,5 +74,7 @@ Write the review file with this structure:
 - Be constructive — explain WHY something is a problem and suggest a concrete fix
 - Do NOT fix issues yourself — only document them in the review
 - Do NOT modify any source code files
+- Do NOT run tests, linters, or type checkers — those run automatically in CI
+- Do NOT repeat issues in chat — write them only to the review file
 - If a file has no issues, do not create false positives — skip it
 - Order issues by severity (CRITICAL first, LOW last)
