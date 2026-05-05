@@ -155,6 +155,13 @@ def diff(
             help="Glob patterns to match against changed file paths (e.g., 'src/*.py' '*.md').",
         ),
     ],
+    context_lines: Annotated[
+        int | None,
+        typer.Option(
+            "--context-lines",
+            help="Number of context lines around changes in diffs. Default: 999999 (full file).",
+        ),
+    ] = None,
     base_ref: Annotated[
         str | None,
         typer.Option(
@@ -187,7 +194,9 @@ def diff(
     ] = None,
 ) -> None:
     """Generate file diffs for changed files matching the given glob patterns."""
-    overrides = _get_overrides(blacklist=blacklist, context=None, fetch=fetch)
+    overrides = _get_overrides(
+        blacklist=blacklist, context=None, fetch=fetch, diff_context_lines=context_lines
+    )
     generator = PrPromptGenerator.from_toml(**overrides)
     prompt = generator.generate_diff(file_patterns, base_ref)
 
@@ -199,14 +208,17 @@ def _get_overrides(
     blacklist: list[str] | None,
     context: list[str] | None,
     fetch: bool | None,
-) -> dict[str, list[str] | bool]:
-    overrides: dict[str, list[str] | bool] = {}
+    diff_context_lines: int | None = None,
+) -> dict[str, list[str] | bool | int]:
+    overrides: dict[str, list[str] | bool | int] = {}
     if blacklist is not None:
         overrides["blacklist_patterns"] = blacklist
     if context is not None:
         overrides["context_patterns"] = context
     if fetch is not None:
         overrides["fetch_base"] = fetch
+    if diff_context_lines is not None:
+        overrides["diff_context_lines"] = diff_context_lines
     return overrides
 
 
