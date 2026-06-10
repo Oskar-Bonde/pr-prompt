@@ -200,6 +200,10 @@ def diff(
     generator = PrPromptGenerator.from_toml(**overrides)
     prompt = generator.generate_diff(file_patterns, base_ref)
 
+    if prompt is None:
+        typer.echo(f"No changed files matched: {', '.join(file_patterns)}", err=True)
+        return
+
     _output(prompt, write=write, label="diff")
 
 

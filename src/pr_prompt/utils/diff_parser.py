@@ -36,7 +36,7 @@ class DiffFile:
             ChangeType.DELETED: "D",
             ChangeType.COPIED: "C",
             ChangeType.RENAMED: "R",
-            ChangeType.RENAMED_AND_MODIFIED: "R",
+            ChangeType.RENAMED_AND_MODIFIED: "RM",
             ChangeType.MODIFIED: "M",
         }
         return status_map[self.change_type_enum]
