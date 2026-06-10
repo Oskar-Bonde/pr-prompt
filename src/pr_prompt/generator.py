@@ -197,7 +197,7 @@ class PrPromptGenerator:
         file_patterns: list[str],
         base_ref: Optional[str] = None,
         head_ref: Optional[str] = None,
-    ) -> str:
+    ) -> Optional[str]:
         """
         Generate file diffs for changed files matching the given glob patterns.
 
@@ -214,6 +214,9 @@ class PrPromptGenerator:
             for path, diff_file in diff_files.items()
             if FileFilter.is_match(path, file_patterns)
         }
+
+        if not filtered:
+            return None
 
         builder = MarkdownBuilder(git)
         builder.add_file_diffs(filtered)
