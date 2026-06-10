@@ -18,7 +18,7 @@ Run `pr-prompt overview` to get PR metadata and the list of changed files.
 pr-prompt overview
 ```
 
-Parse the changed files list. Each line has the format `{indicator} {path}` where indicator is A (added), M (modified), D (deleted), R (renamed), or C (copied).
+Parse the changed files list. Each line has the format `{indicator} {path}` where indicator is A (added), M (modified), D (deleted), R (renamed), RM (renamed and modified), or C (copied).
 
 ### 2. Create File Checklist
 
