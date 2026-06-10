@@ -22,17 +22,23 @@ Parse the changed files list. Each line has the format `{indicator} {path}` wher
 
 ### 2. Create File Checklist
 
-Use #tool:todo to create a checklist with one item per changed file.
+Use #tool:todo to create a checklist with one item per changed file. Include the change indicator in each todo item (e.g. `M src/foo.py`). Do NOT create a todo for renamed (R) files — the overview already states how the file was renamed.
 
 ### 3. Analyze Each File
 
-For each file in the checklist:
+For each file in the checklist, handle it according to its change indicator:
+
+- **A (added):** Read the whole file normally to understand the new code.
+- **D (deleted):** Run `pr-prompt diff '{file_path}'` to retrieve the original content (do not ignore deleted files).
+- **R (renamed):** No analysis needed — the overview already states the original and new path.
+- **M (modified) / RM (renamed and modified):** Run `pr-prompt diff '{file_path}' --context-lines 3` to see what changed. Read the full file if the diff is insufficient to understand the change.
+
+Workflow for each item:
 
 1. **Mark the todo in-progress**
-2. **Quick diff** — Run `pr-prompt diff '{file_path}' --context-lines 3` to see what changed with minimal context
+2. **Inspect the change** using the method for its indicator above
 3. **Understand the change** — Determine what was modified and why
-4. **Full context if needed** — If the quick diff is insufficient to understand the change, read the full file
-5. **Mark the todo completed**
+4. **Mark the todo completed**
 
 ### 4. Write Description
 

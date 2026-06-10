@@ -22,18 +22,24 @@ Parse the changed files list. Each line has the format `{indicator} {path}` wher
 
 ### 2. Create Review Checklist
 
-Use #tool:todo to create a checklist with one item per changed file. Skip deleted files (D) — there's nothing to review in removed code.
+Use #tool:todo to create a checklist with one item per changed file. Include the change indicator in each todo item (e.g. `M src/foo.py`). Do NOT create a todo for renamed (R) files — the overview already states how the file was renamed, and there is nothing to review in a pure rename.
 
 ### 3. Review Each File
 
-For each file in the checklist:
+For each file in the checklist, handle it according to its change indicator:
+
+- **A (added):** Read the whole file normally to review the new code.
+- **D (deleted):** Run `pr-prompt diff '{file_path}'` to retrieve the original content (do not ignore deleted files).
+- **R (renamed):** No review needed — the overview already states the original and new path.
+- **M (modified) / RM (renamed and modified):** Run `pr-prompt diff '{file_path}' --context-lines 3` to see what changed, then read the full file to understand whether the changes integrate well.
+
+Workflow for each item:
 
 1. **Mark the todo in-progress**
-2. **Quick diff** — Run `pr-prompt diff '{file_path}' --context-lines 3` to see what changed with minimal context
+2. **Inspect the change** using the method for its indicator above
 3. **Analyze the changes** — Understand what was modified and why
-4. **Full file read** — Read the complete file to understand the surrounding code and whether the changes integrate well
-5. **Record issues** — Note any problems found (see Issue Format below)
-6. **Mark the todo completed**
+4. **Record issues** — Note any problems found (see Issue Format below)
+5. **Mark the todo completed**
 
 ### 4. Write Review
 
